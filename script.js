@@ -10,6 +10,18 @@ const para = document.getElementById("paragraph");
 para.innerHTML = "CHANGED";
 let encodedCountry;
 
+
+import {OPENCAGE_API_KEY, GEOCODE_API_KEY, GOOGLE_API_KEY, JAMENDO_CLIENT_ID} from "./config.js";
+
+const openCageAPIKey = OPENCAGE_API_KEY;
+const geocodeAPIKey = GEOCODE_API_KEY;
+const googleAPIKey = GOOGLE_API_KEY;
+const jamendoClientID = JAMENDO_CLIENT_ID;
+
+const googleMapsAPIScriptObj = document.getElementById("google-maps-js-api");
+googleMapsAPIScriptObj.src = `https://maps.googleapis.com/maps/api/js?key=${googleAPIKey}&callback=initialize&loading=async&v=weekly`;
+
+
 // Get a random set of coordinates using getRandomCoordinates.
 // Pass those coordinates to the OpenCage Geocoding API to get coordinates of nearest road. Keep retrying until a result is found.
 // get the country name from the coordinates found
@@ -25,7 +37,7 @@ async function getRandomCoordinates() {
   let geometry = null;
 
   // Latitude ranges for major continents (excluding Antarctica)
-  const latitudeRanges = [
+  /*const latitudeRanges = [
     { min: 15, max: 70 },  // North America (USA, Canada, Mexico)
     { min: -55, max: 15 }, // South America (Argentina to Northern South America)
     { min: 40, max: 70 },  // Europe (Southern to Northern Europe)
@@ -45,7 +57,34 @@ async function getRandomCoordinates() {
     { min: 110, max: 150 },   // Australia to New Zealand
     { min: 16.449, max: 32.8917 }//SA
     
+  ];*/
+
+  const latitudeRanges = [
+    { min: 24.396308, max: 49.384358 }, // Continental USA
+    /*{ min: 36.578581, max: 71.538800 }, // Canada
+    { min: 14.53125, max: 32.715736 }, // Mexico
+    { min: -55.0, max: 12.0 }, // South America (general coverage)
+    { min: 35.0, max: 71.0 }, // Europe
+    { min: -35.0, max: 37.0 }, // Africa (general coverage)
+    { min: -11.0, max: 45.0 }, // Asia (general coverage)
+    { min: -60.0, max: -10.0 }, // Australia and Oceania (general coverage)
+    { min: 1.0, max: 10.0 }, // Southeast Asia
+    { min: 50.0, max: 60.0 }, // Northern Europe*/
   ];
+  
+  const longitudeRanges = [
+    { min: -123.0, max: -68.93457 }, // Continental USA
+    /*{ min: -141.0, max: -52.0 }, // Canada
+    { min: -118.4, max: -86.7 }, // Mexico
+    { min: -81.0, max: -35.0 }, // South America
+    { min: -25.0, max: 40.0 }, // Europe
+    { min: -18.0, max: 51.0 }, // Africa
+    { min: 60.0, max: 180.0 }, // Asia
+    { min: 110.0, max: 180.0 }, // Australia and Oceania
+    { min: 100.0, max: 180.0 }, // Southeast Asia
+    { min: 0.0, max: 25.0 }, // Northern Europe*/
+  ];
+  
 
 
   // Randomly pick a range from the arrays
@@ -61,7 +100,7 @@ async function getRandomCoordinates() {
 
   console.log("ORIGINAL COORDINATES", latitude,longitude);
 
-  const roadApiUrl = `https://api.opencagedata.com/geocode/v1/json?q=${latitude},${longitude}&key=69d59ee470f24adb97c187d0d006eeb1&language=en&roadinfo=1&pretty=1`;
+  const roadApiUrl = `https://api.opencagedata.com/geocode/v1/json?q=${latitude},${longitude}&key=${openCageAPIKey}&language=en&roadinfo=1&pretty=1`;
   //console.log("CHANGEDCOORDINATES",roadApiUrl);
 
   try {
@@ -107,7 +146,7 @@ async function fetchCountry() {
   longitude = coordinates.longitude;
   console.log("fetchCountry latitude:", latitude);
   console.log("fetchCountry longitude:", longitude);
-  const apiUrl = `https://geocode.maps.co/reverse?lat=${latitude}&lon=${longitude}&api_key=66f86f9209ead753863632rmq2d6726`;
+  const apiUrl = `https://geocode.maps.co/reverse?lat=${latitude}&lon=${longitude}&api_key=${geocodeAPIKey}`;
 
   try {
     const response = await fetch(apiUrl);
@@ -127,7 +166,7 @@ async function fetchCountry() {
       return fetchCountry();
     } else {
       const country = data.address.country || 'Country not found';
-      const streetViewApiUrl = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${latitude},${longitude}&key=AIzaSyAOB3wAcUOx_wjfd5KCApjhj-TYxJEd924&radius=100`;
+      const streetViewApiUrl = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${latitude},${longitude}&key=${googleAPIKey}&radius=100`;
       const streetViewResponse = await fetch(streetViewApiUrl);
 
       if (!streetViewResponse.ok) {
@@ -158,7 +197,7 @@ async function startProcess() {
     console.log("Country:", country);
 
     //const musicApiUrl = `https://de1.api.radio-browser.info/json/stations/search?country=${encodedCountry}&tag=jazz&limit=1`;
-    const artistApiUrl = `https://api.jamendo.com/v3.0/artists/locations/?client_id=3d25d527&format=jsonpretty&limit=5&haslocation=true&location_coords=${latitude}_${longitude}&location_radius=200`; // takes in coordinates to get artist
+    const artistApiUrl = `https://api.jamendo.com/v3.0/artists/locations/?client_id=${jamendoClientID}&format=jsonpretty&limit=5&haslocation=true&location_coords=${latitude}_${longitude}&location_radius=200`; // takes in coordinates to get artist
 
     try {
       //const response = await fetch(musicApiUrl);
@@ -174,7 +213,7 @@ async function startProcess() {
       }
       else {
         let artistId = data.results[Math.floor(Math.random() * data.results.length)].id;
-        const trackApiUrl = `https://api.jamendo.com/v3.0/artists/tracks/?client_id=3d25d527&format=jsonpretty&order=track_name_desc&id=${artistId}&audioformat=mp31`; // takes in artist id to get stream url
+        const trackApiUrl = `https://api.jamendo.com/v3.0/artists/tracks/?client_id=${jamendoClientID}&format=jsonpretty&order=track_name_desc&id=${artistId}&audioformat=mp31`; // takes in artist id to get stream url
         const trackResponse = await fetch(trackApiUrl);
         if (!trackResponse.ok) {
           throw new Error('Network response was not ok');
