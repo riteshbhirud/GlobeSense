@@ -4,6 +4,7 @@
 
 <head>
   <title>Street View split-map-panes</title>
+  
   <link rel="stylesheet" href="./styles.css">
   
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
@@ -12,6 +13,7 @@
 </head>
 
 <body>
+  <p></p>
 
   <audio id="background-audio" autoplay loop type="audio/mpeg">Your browser does not support the audio element.</audio>
   <div id="pano"></div>
@@ -27,10 +29,9 @@
       and consistent behavior across browsers, consider loading using Promises. See
       https://developers.google.com/maps/documentation/javascript/load-maps-js-api
       for more information.
-      -->
+      --> 
 
-  <script src="https://requirejs.org/docs/release/2.3.5/minified/require.js"></script>
-  <script id="google-maps-js-api" defer></script>
+  <script id="google-maps-js-api" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOB3wAcUOx_wjfd5KCApjhj-TYxJEd924&callback=initialize&v=weekly" defer></script>
   <script src="./script.js"></script>
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   
