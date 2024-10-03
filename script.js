@@ -24,14 +24,13 @@ cities = ["New%20York", "Los%20Angeles", "Chicago", "Toronto", "Mexico%20City", 
   "Phnom%20Penh", "Vientiane", "Yangon", "Naypyidaw", "Busan", "Taipei", "Tokyo", "Osaka", 
   "Nagoya", "Sapporo", "Kyoto", "Shenzhen", "Guangzhou", "Chengdu", "Wuhan"]
 
-let city = cities[Math.floor(Math.random(cities.length))]
 
-const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
+//const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
 
 
 //import {OPENCAGE_API_KEY, GEOCODE_API_KEY, GOOGLE_API_KEY, JAMENDO_CLIENT_ID} from "./config.js";
 
-const OPENCAGE_API_KEY = "69d59ee470f24adb97c187d0d006eeb1";
+const OPENCAGE_API_KEY = "7a884e24cd134e77a00bf0317cef614e";
 const GEOCODE_API_KEY = "66f86f9209ead753863632rmq2d6726";
 const GOOGLE_API_KEY = "AIzaSyAOB3wAcUOx_wjfd5KCApjhj-TYxJEd924";
 const JAMENDO_CLIENT_ID = "3d25d527";
@@ -114,20 +113,29 @@ async function getRandomCoordinates() {
   // Randomly pick a range from the arrays
   /*const choice = Math.floor(Math.random() * latitudeRanges.length)
   console.log("ORIGINAL",choice);*/
-  let city = cities[Math.floor(Math.random(cities.length))]
+  let city = cities[Math.floor(Math.random()*cities.length)]
+  
   console.log("city:", city)
-  const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=Mumbai&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
+  const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
 
   try {
     const coordinatesResponse = await fetch(boundingBoxApiUrl)
-    if (!response.ok) {
+    if (!coordinatesResponse.ok) {
       throw new Error('Network response was not ok');
+
     }
     const coordinatesData = await coordinatesResponse.json()
-    coordinates = coordinatesData[0].geojson.coordinates[0][0][0]
-    console.log(coordinates)
-    latitude = coordinates[1]
-    longitude = coordinates[0]
+    
+    coordinates = coordinatesData[0].geojson.coordinates[0]
+    if (coordinates.length == 1) {
+      coordinates = coordinates[0]
+    }
+    //OSaka 00 0/1 !=1
+    //NY 000 0/1 ==1
+    latitude = coordinates[0][1]
+    longitude = coordinates[0][0]
+
+    console.log("coordinates data:", latitude,longitude);
 
   } catch (error) {
     console.error('Fetch error:', error);
