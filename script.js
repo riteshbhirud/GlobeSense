@@ -9,17 +9,41 @@ const submitBtn = document.getElementById("submit");
 const para = document.getElementById("paragraph");
 para.innerHTML = "CHANGED";
 let encodedCountry;
+cities = ["New%20York", "Los%20Angeles", "Chicago", "Toronto", "Mexico%20City", "Houston", "Vancouver", 
+  "San%20Francisco", "Montreal", "Miami", "São%20Paulo", "Buenos%20Aires", "Rio%20de%20Janeiro", 
+  "Santiago", "Bogotá", "Lima", "Caracas", "Medellín", "Montevideo", "Quito", "London", 
+  "Paris", "Berlin", "Madrid", "Rome", "Amsterdam", "Vienna", "Zurich", "Warsaw", 
+  "Oslo", "Tokyo", "Shanghai", "Beijing", "Seoul", "Mumbai", "Bangkok", "Jakarta", 
+  "Manila", "Singapore", "Kuala%20Lumpur", "Lagos", "Cairo", "Nairobi", "Johannesburg", 
+  "Accra", "Algiers", "Addis%20Ababa", "Casablanca", "Kinshasa", "Dakar", "Sydney", 
+  "Melbourne", "Brisbane", "Perth", "Auckland", "Wellington", "Canberra", "Adelaide", 
+  "Hobart", "Suva", "Istanbul", "Moscow", "Kiev", "St.%20Petersburg", "Dubai", "Abu%20Dhabi", 
+  "Tehran", "Riyadh", "Tel%20Aviv", "Jerusalem", "Doha", "Kuwait%20City", "Baku", "Ankara", 
+  "Baghdad", "Damascus", "Amman", "Muscat", "Beirut", "Manama", "Dhaka", "Karachi", 
+  "Islamabad", "Colombo", "Kathmandu", "Thimphu", "Male", "Hanoi", "Ho%20Chi%20Minh%20City", 
+  "Phnom%20Penh", "Vientiane", "Yangon", "Naypyidaw", "Busan", "Taipei", "Tokyo", "Osaka", 
+  "Nagoya", "Sapporo", "Kyoto", "Shenzhen", "Guangzhou", "Chengdu", "Wuhan"]
+
+let city = cities[Math.floor(Math.random(cities.length))]
+
+const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
 
 
-import {OPENCAGE_API_KEY, GEOCODE_API_KEY, GOOGLE_API_KEY, JAMENDO_CLIENT_ID} from "./config.js";
+//import {OPENCAGE_API_KEY, GEOCODE_API_KEY, GOOGLE_API_KEY, JAMENDO_CLIENT_ID} from "./config.js";
+
+const OPENCAGE_API_KEY = "69d59ee470f24adb97c187d0d006eeb1";
+const GEOCODE_API_KEY = "66f86f9209ead753863632rmq2d6726";
+const GOOGLE_API_KEY = "AIzaSyAOB3wAcUOx_wjfd5KCApjhj-TYxJEd924";
+const JAMENDO_CLIENT_ID = "3d25d527";
 
 const openCageAPIKey = OPENCAGE_API_KEY;
 const geocodeAPIKey = GEOCODE_API_KEY;
 const googleAPIKey = GOOGLE_API_KEY;
 const jamendoClientID = JAMENDO_CLIENT_ID;
 
-const googleMapsAPIScriptObj = document.getElementById("google-maps-js-api");
-googleMapsAPIScriptObj.src = `https://maps.googleapis.com/maps/api/js?key=${googleAPIKey}&callback=initialize&loading=async&v=weekly`;
+
+//const googleMapsAPIScriptObj = document.getElementById("google-maps-js-api");
+//googleMapsAPIScriptObj.src = `https://maps.googleapis.com/maps/api/js?key=${googleAPIKey}&callback=initialize&loading=async&v=weekly`;
 
 
 // Get a random set of coordinates using getRandomCoordinates.
@@ -59,7 +83,7 @@ async function getRandomCoordinates() {
     
   ];*/
 
-  const latitudeRanges = [
+  /*const latitudeRanges = [
     { min: 24.396308, max: 49.384358 }, // Continental USA
     /*{ min: 36.578581, max: 71.538800 }, // Canada
     { min: 14.53125, max: 32.715736 }, // Mexico
@@ -69,8 +93,8 @@ async function getRandomCoordinates() {
     { min: -11.0, max: 45.0 }, // Asia (general coverage)
     { min: -60.0, max: -10.0 }, // Australia and Oceania (general coverage)
     { min: 1.0, max: 10.0 }, // Southeast Asia
-    { min: 50.0, max: 60.0 }, // Northern Europe*/
-  ];
+    { min: 50.0, max: 60.0 }, // Northern Europe
+  ]
   
   const longitudeRanges = [
     { min: -123.0, max: -68.93457 }, // Continental USA
@@ -82,21 +106,39 @@ async function getRandomCoordinates() {
     { min: 60.0, max: 180.0 }, // Asia
     { min: 110.0, max: 180.0 }, // Australia and Oceania
     { min: 100.0, max: 180.0 }, // Southeast Asia
-    { min: 0.0, max: 25.0 }, // Northern Europe*/
-  ];
+    { min: 0.0, max: 25.0 }, // Northern Europe
+  ];*/
   
 
 
   // Randomly pick a range from the arrays
-  const choice = Math.floor(Math.random() * latitudeRanges.length)
-  console.log("ORIGINAL",choice);
-  
-  const latRange = latitudeRanges[choice];
-  const lonRange = longitudeRanges[choice];
+  /*const choice = Math.floor(Math.random() * latitudeRanges.length)
+  console.log("ORIGINAL",choice);*/
+  let city = cities[Math.floor(Math.random(cities.length))]
+  console.log("city:", city)
+  const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=Mumbai&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
+
+  try {
+    const coordinatesResponse = await fetch(boundingBoxApiUrl)
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const coordinatesData = await coordinatesResponse.json()
+    coordinates = coordinatesData[0].geojson.coordinates[0][0][0]
+    console.log(coordinates)
+    latitude = coordinates[1]
+    longitude = coordinates[0]
+
+  } catch (error) {
+    console.error('Fetch error:', error);
+  }
+
+  //const latRange = latitudeRanges[choice];
+  //const lonRange = longitudeRanges[choice];
 
   // Generate random latitude and longitude within the selected ranges
-  const latitude = Math.random() * (latRange.max - latRange.min) + latRange.min;
-  const longitude = Math.random() * (lonRange.max - lonRange.min) + lonRange.min;
+  /*const latitude = Math.random() * (latRange.max - latRange.min) + latRange.min;
+  const longitude = Math.random() * (lonRange.max - lonRange.min) + lonRange.min;*/
 
   console.log("ORIGINAL COORDINATES", latitude,longitude);
 
