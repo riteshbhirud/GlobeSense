@@ -7,8 +7,9 @@ let userLat = 0;
 let userLong = 0;
 const submitBtn = document.getElementById("submit");
 const para = document.getElementById("paragraph");
-para.innerHTML = "CHANGED";
-const map = document.getElementById("map");
+
+let streetViewStatus = false;
+//const map = document.getElementById("map");
 
 let encodedCountry;
 let url;
@@ -26,6 +27,7 @@ cities = ["New%20York", "Los%20Angeles", "Chicago", "Toronto", "Mexico%20City", 
   "Islamabad", "Colombo", "Kathmandu", "Thimphu", "Male", "Hanoi", "Ho%20Chi%20Minh%20City",
   "Phnom%20Penh", "Vientiane", "Yangon", "Naypyidaw", "Busan", "Taipei", "Tokyo", "Osaka",
   "Nagoya", "Sapporo", "Kyoto", "Shenzhen", "Guangzhou", "Chengdu", "Wuhan"]
+
 
 
 //const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
@@ -252,6 +254,7 @@ async function fetchCountry() {
 
     const streetViewData = await streetViewResponse.json();
     if (streetViewData.status === "OK") {
+      streetViewStatus = true;
       console.log("GOOGLE STREET VIEW SUCCESSFUL:", latitude, longitude, "are able to be displayed by google street view.")
       initialize(parseFloat(latitude), parseFloat(longitude));
       return encodedCountry;
@@ -408,12 +411,15 @@ async function startProcess() {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);*/
     document.getElementById('map').addEventListener('mouseenter', function() {
+
+
       setTimeout(function() {
           map.invalidateSize(); 
       }, 100); 
       submitBtn.style.display = 'block';
       submitBtn.style.bottom = '620px';
       submitBtn.style.left = '1100px';
+
   });
 
   document.getElementById('map').addEventListener('mouseleave', function() {
@@ -471,6 +477,10 @@ async function startProcess() {
     //SpacebarAnswer
 
     document.addEventListener("keydown", (event) => {
+      document.getElementById('map').style.width = "700px";
+      document.getElementById('map').style.height = "600px";
+
+
       if (event.key===" "){
       //alert(`You Picked Lat: ${userLat}, Long: ${userLong}`);
       let userdistance = haversineDistance(latitude,longitude,userLat,userLong);
@@ -496,6 +506,21 @@ async function startProcess() {
 
 
     })
+      //loading screen
+  const checkStreetViewStatus = setInterval(() => {
+    if (streetViewStatus) {
+        document.getElementById("loop").style.display = 'none';
+        document.getElementById("bike-wrapper").style.display = 'none';
+        document.getElementById("map").style.display= 'block';
+        setTimeout(function() {
+          map.invalidateSize(); 
+      }, 100); 
+
+        document.getElementById("pano").style.display = 'block';
+
+        clearInterval(checkStreetViewStatus);
+    }
+}, 100); 
   });
   function haversineDistance(lat1, lon1, lat2, lon2) {
     
