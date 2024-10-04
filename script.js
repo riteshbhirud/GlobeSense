@@ -288,6 +288,7 @@ async function startProcess() {
           startProcessRadio()
         }
         else {
+          console.log("JAMENDO BEING USED")
           randArtist = Math.floor(Math.random() * data.results.length)
           let artistId = data.results[randArtist].id;
           const trackApiUrl = `https://api.jamendo.com/v3.0/artists/tracks/?client_id=${jamendoClientID}&format=jsonpretty&order=track_name_desc&id=${artistId}&audioformat=mp31`; // takes in artist id to get stream url
@@ -364,7 +365,7 @@ async function startProcess() {
   window.initialize = initialize;
 
   async function startProcessRadio() {
-
+    console.log("BACKUP RADIO BEING USED")
 
     const musicApiUrl = `https://de1.api.radio-browser.info/json/stations/search?country=${encodedCountry}&limit=1`;
 
