@@ -9,19 +9,20 @@ const submitBtn = document.getElementById("submit");
 const para = document.getElementById("paragraph");
 para.innerHTML = "CHANGED";
 let encodedCountry;
-cities = ["New%20York", "Los%20Angeles", "Chicago", "Toronto", "Mexico%20City", "Houston", "Vancouver", 
-  "San%20Francisco", "Montreal", "Miami", "São%20Paulo", "Buenos%20Aires", "Rio%20de%20Janeiro", 
-  "Santiago", "Bogotá", "Lima", "Caracas", "Medellín", "Montevideo", "Quito", "London", 
-  "Paris", "Berlin", "Madrid", "Rome", "Amsterdam", "Vienna", "Zurich", "Warsaw", 
-  "Oslo", "Tokyo", "Shanghai", "Beijing", "Seoul", "Mumbai", "Bangkok", "Jakarta", 
-  "Manila", "Singapore", "Kuala%20Lumpur", "Lagos", "Cairo", "Nairobi", "Johannesburg", 
-  "Accra", "Algiers", "Addis%20Ababa", "Casablanca", "Kinshasa", "Dakar", "Sydney", 
-  "Melbourne", "Brisbane", "Perth", "Auckland", "Wellington", "Canberra", "Adelaide", 
-  "Hobart", "Suva", "Istanbul", "Moscow", "Kiev", "St.%20Petersburg", "Dubai", "Abu%20Dhabi", 
-  "Tehran", "Riyadh", "Tel%20Aviv", "Jerusalem", "Doha", "Kuwait%20City", "Baku", "Ankara", 
-  "Baghdad", "Damascus", "Amman", "Muscat", "Beirut", "Manama", "Dhaka", "Karachi", 
-  "Islamabad", "Colombo", "Kathmandu", "Thimphu", "Male", "Hanoi", "Ho%20Chi%20Minh%20City", 
-  "Phnom%20Penh", "Vientiane", "Yangon", "Naypyidaw", "Busan", "Taipei", "Tokyo", "Osaka", 
+let url;
+cities = ["New%20York", "Los%20Angeles", "Chicago", "Toronto", "Mexico%20City", "Houston", "Vancouver",
+  "San%20Francisco", "Montreal", "Miami", "São%20Paulo", "Buenos%20Aires", "Rio%20de%20Janeiro",
+  "Santiago", "Bogotá", "Lima", "Caracas", "Medellín", "Montevideo", "Quito", "London",
+  "Paris", "Berlin", "Madrid", "Rome", "Amsterdam", "Vienna", "Zurich", "Warsaw",
+  "Oslo", "Tokyo", "Shanghai", "Beijing", "Seoul", "Mumbai", "Bangkok", "Jakarta",
+  "Manila", "Singapore", "Kuala%20Lumpur", "Cairo", "Nairobi", "Johannesburg",
+  "Accra", "Algiers", "Addis%20Ababa", "Casablanca", "Kinshasa", "Dakar", "Sydney",
+  "Melbourne", "Brisbane", "Perth", "Auckland", "Wellington", "Canberra", "Adelaide",
+  "Hobart", "Suva", "Istanbul", "Moscow", "Kiev", "St.%20Petersburg", "Dubai", "Abu%20Dhabi",
+  "Tehran", "Riyadh", "Tel%20Aviv", "Jerusalem", "Doha", "Kuwait%20City", "Baku", "Ankara",
+  "Baghdad", "Damascus", "Amman", "Muscat", "Beirut", "Manama", "Dhaka", "Karachi",
+  "Islamabad", "Colombo", "Kathmandu", "Thimphu", "Male", "Hanoi", "Ho%20Chi%20Minh%20City",
+  "Phnom%20Penh", "Vientiane", "Yangon", "Naypyidaw", "Busan", "Taipei", "Tokyo", "Osaka",
   "Nagoya", "Sapporo", "Kyoto", "Shenzhen", "Guangzhou", "Chengdu", "Wuhan"]
 
 
@@ -107,14 +108,15 @@ async function getRandomCoordinates() {
     { min: 100.0, max: 180.0 }, // Southeast Asia
     { min: 0.0, max: 25.0 }, // Northern Europe
   ];*/
-  
+
 
 
   // Randomly pick a range from the arrays
   /*const choice = Math.floor(Math.random() * latitudeRanges.length)
   console.log("ORIGINAL",choice);*/
-  let city = cities[Math.floor(Math.random()*cities.length)]
-  
+
+  let city = cities[Math.floor(Math.random() * cities.length)]
+
   console.log("city:", city)
   const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
 
@@ -125,8 +127,9 @@ async function getRandomCoordinates() {
 
     }
     const coordinatesData = await coordinatesResponse.json()
-    
+
     coordinates = coordinatesData[0].geojson.coordinates[0]
+    encodedCountry = encodeURIComponent(coordinatesData[0].address.country);
     if (coordinates.length == 1) {
       coordinates = coordinates[0]
     }
@@ -134,8 +137,6 @@ async function getRandomCoordinates() {
     //NY 000 0/1 ==1
     latitude = coordinates[0][1]
     longitude = coordinates[0][0]
-
-    console.log("coordinates data:", latitude,longitude);
 
   } catch (error) {
     console.error('Fetch error:', error);
@@ -148,7 +149,7 @@ async function getRandomCoordinates() {
   /*const latitude = Math.random() * (latRange.max - latRange.min) + latRange.min;
   const longitude = Math.random() * (lonRange.max - lonRange.min) + lonRange.min;*/
 
-  console.log("ORIGINAL COORDINATES", latitude,longitude);
+  console.log("ORIGINAL COORDINATES", latitude, longitude);
 
   const roadApiUrl = `https://api.opencagedata.com/geocode/v1/json?q=${latitude},${longitude}&key=${openCageAPIKey}&language=en&roadinfo=1&pretty=1`;
   //console.log("CHANGEDCOORDINATES",roadApiUrl);
@@ -194,11 +195,11 @@ async function fetchCountry() {
   console.log("fetchCountry coordinates", coordinates);
   latitude = coordinates.latitude;
   longitude = coordinates.longitude;
-  console.log("fetchCountry latitude:", latitude);
-  console.log("fetchCountry longitude:", longitude);
-  const apiUrl = `https://geocode.maps.co/reverse?lat=${latitude}&lon=${longitude}&api_key=${geocodeAPIKey}`;
+  //console.log("fetchCountry latitude:", latitude);
+  //console.log("fetchCountry longitude:", longitude);
+  //const apiUrl = `https://geocode.maps.co/reverse?lat=${latitude}&lon=${longitude}&api_key=${geocodeAPIKey}`;
 
-  try {
+  /*try {
     const response = await fetch(apiUrl);
     if (response.status === 429) {
       console.warn('Too many requests. Retrying after 2 seconds...');
@@ -225,6 +226,7 @@ async function fetchCountry() {
 
       const streetViewData = await streetViewResponse.json();
       if (streetViewData.status === "OK") {
+        console.log("GOOGLE STREET VIEW SUCCESSFUL:", latitude, longitude, "are able to be displayed by google street view.")
         initialize(latitude, longitude);
         return country;
       } else if (streetViewData.status === "ZERO_RESULTS") {
@@ -236,95 +238,133 @@ async function fetchCountry() {
     console.error('Fetch error:', error);
     await wait(2000); // Retry after 2 seconds
     return fetchCountry();
+  }*/
+
+  try {
+    const streetViewApiUrl = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${latitude},${longitude}&key=${googleAPIKey}&radius=100`;
+    const streetViewResponse = await fetch(streetViewApiUrl);
+
+    if (!streetViewResponse.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const streetViewData = await streetViewResponse.json();
+    if (streetViewData.status === "OK") {
+      console.log("GOOGLE STREET VIEW SUCCESSFUL:", latitude, longitude, "are able to be displayed by google street view.")
+      initialize(parseFloat(latitude), parseFloat(longitude));
+      return encodedCountry;
+    } else if (streetViewData.status === "ZERO_RESULTS") {
+      console.warn('No Street View coverage at this location. Fetching new location...');
+      return fetchCountry();
+    }
+  } catch (error) {
+    console.error('Fetch error:', error);
+    await wait(2000); // Retry after 2 seconds
+    return fetchCountry();
   }
+
   return null; // Fallback in case of an unexpected failure
 }
 
+
 async function startProcess() {
-  const country = await fetchCountry();
-  if (country) {
-    encodedCountry = encodeURIComponent(country);
-    console.log("Country:", country);
+    const country = await fetchCountry();
+    if (country) {
+      encodedCountry = encodeURIComponent(country);
+      console.log("Country:", country);
 
-    //const musicApiUrl = `https://de1.api.radio-browser.info/json/stations/search?country=${encodedCountry}&tag=jazz&limit=1`;
-    const artistApiUrl = `https://api.jamendo.com/v3.0/artists/locations/?client_id=${jamendoClientID}&format=jsonpretty&limit=5&haslocation=true&location_coords=${latitude}_${longitude}&location_radius=200`; // takes in coordinates to get artist
+      //const musicApiUrl = `https://de1.api.radio-browser.info/json/stations/search?country=${encodedCountry}&tag=jazz&limit=1`;
+      const artistApiUrl = `https://api.jamendo.com/v3.0/artists/locations/?client_id=${jamendoClientID}&format=jsonpretty&limit=5&haslocation=true&location_coords=${latitude}_${longitude}&location_radius=200`; // takes in coordinates to get artist
 
-    try {
-      //const response = await fetch(musicApiUrl);
-      const response = await fetch(artistApiUrl);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      console.log("artist data:", data);
-
-      if (data.results.length === 0) {
-        startProcessRadio()
-      }
-      else {
-        let artistId = data.results[Math.floor(Math.random() * data.results.length)].id;
-        const trackApiUrl = `https://api.jamendo.com/v3.0/artists/tracks/?client_id=${jamendoClientID}&format=jsonpretty&order=track_name_desc&id=${artistId}&audioformat=mp31`; // takes in artist id to get stream url
-        const trackResponse = await fetch(trackApiUrl);
-        if (!trackResponse.ok) {
+      try {
+        //const response = await fetch(musicApiUrl);
+        const response = await fetch(artistApiUrl);
+        if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        const trackData = await trackResponse.json();
-        console.log("track data:", trackData);
-        let url = trackData.results[0].tracks[Math.floor(Math.random() * trackData.results[0].tracks.length)].audio;
-        console.log("url:", url);
+        const data = await response.json();
+
+        if (data.results.length === 0) {
+          startProcessRadio()
+        }
+        else {
+          randArtist = Math.floor(Math.random() * data.results.length)
+          let artistId = data.results[randArtist].id;
+          const trackApiUrl = `https://api.jamendo.com/v3.0/artists/tracks/?client_id=${jamendoClientID}&format=jsonpretty&order=track_name_desc&id=${artistId}&audioformat=mp31`; // takes in artist id to get stream url
+          const trackResponse = await fetch(trackApiUrl);
+          if (!trackResponse.ok) {
+            throw new Error('Network response was not ok');
+          }
+          const trackData = await trackResponse.json();
+          randSong = Math.floor(Math.random() * trackData.results[0].tracks.length)
+
+          console.log("track data:", trackData);
+          console.log("Artist name:", data.results[randArtist].name)
+          console.log(`Song name: ${trackData.results[0].tracks[randSong].name}`)
+          url = trackData.results[0].tracks[randSong].audio;
+          console.log("url:", url);
+          //music.src = url;
+        }
+
+        console.log("reached");
+        const music = document.createElement("audio");
+        music.id = "background-audio"
         music.src = url;
+        music.innerHTML = "Your browser does not support the audio element.";
+        //music.type = "audio/mpeg";
+        music.autoplay = true;
+        music.loop = true;
+
+
+
+        /*if (data.length > 0) {
+          let url = data[0].url_resolved;
+          console.log(url);
+          music.src = url;
+        } else {
+          console.warn('No stations found for the selected country.');
+        }*/
+      } catch (error) {
+        console.error('Music Fetch error:', error);
       }
-      
-      
-      
-      /*if (data.length > 0) {
-        let url = data[0].url_resolved;
-        console.log(url);
-        music.src = url;
-      } else {
-        console.warn('No stations found for the selected country.');
-      }*/
-    } catch (error) {
-      console.error('Music Fetch error:', error);
     }
   }
-}
 
-// Start the process by fetching the country and then the music
+  // Start the process by fetching the country and then the music
 
-function initialize(lat, lng) {
-  const fenway = { lat: lat, lng: lng };
+  function initialize(lat, lng) {
+    const fenway = { lat: lat, lng: lng };
 
-  const panorama = new google.maps.StreetViewPanorama(
-    document.getElementById("pano"),
-    {
-      position: fenway,
-      pov: {
-        heading: 34,
-        pitch: 10,
-      },
-      disableDefaultUI: true,  // Disable default UI controls
-      linksControl: false,     // Disable navigation arrows
-      panControl: false,       // Disable panning control
-      addressControl: false,   // Disable street address display
-      showRoadLabels: false,   // Hide street name indications
-    }
-  );
+    const panorama = new google.maps.StreetViewPanorama(
+      document.getElementById("pano"),
+      {
+        position: fenway,
+        pov: {
+          heading: 34,
+          pitch: 10,
+        },
+        disableDefaultUI: true,  // Disable default UI controls
+        linksControl: false,     // Disable navigation arrows
+        panControl: false,       // Disable panning control
+        addressControl: false,   // Disable street address display
+        showRoadLabels: false,   // Hide street name indications
+      }
+    );
 
-  // If 'map' is defined elsewhere in your code
-  // map.setStreetView(panorama);
-}
+    // If 'map' is defined elsewhere in your code
+    // map.setStreetView(panorama);
+  }
 
 
-// Start the process by fetching the country
-/*let chosenCountry = fetchCountry();
-chosenCountry = encodeURIComponent(chosenCountry);
-console.log("LASTcountry:", chosenCountry);*/
+  // Start the process by fetching the country
+  /*let chosenCountry = fetchCountry();
+  chosenCountry = encodeURIComponent(chosenCountry);
+  console.log("LASTcountry:", chosenCountry);*/
 
-window.initialize = initialize;
+  window.initialize = initialize;
 
-async function startProcessRadio() {
-  
+  async function startProcessRadio() {
+
 
     const musicApiUrl = `https://de1.api.radio-browser.info/json/stations/search?country=${encodedCountry}&limit=1`;
 
@@ -335,9 +375,9 @@ async function startProcessRadio() {
       }
       const data = await response.json();
       if (data.length > 0) {
-        let url = data[0].url_resolved;
+        url = data[0].url_resolved;
         console.log(url);
-        music.src = url;
+        //music.src = url;
       } else {
         console.warn('No stations found for the selected country.');
       }
@@ -346,34 +386,35 @@ async function startProcessRadio() {
     }
   }
 
-startProcess();
+  startProcess();
 
 
-// Wait for the document to fully load before initializing the Leaflet map
-document.addEventListener("DOMContentLoaded", function() {
-  // Initialize Leaflet map 
-  var map = L.map('map').setView([20, 0], 2); // World view with center at [20, 0] and zoom level 2
-
- 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-
-  // Add a click event listener to the Leaflet map
-  map.on('click', function(e) {
-    var latlng = e.latlng; // Get the coordinates of the clicked point
-    L.marker(latlng).addTo(map); // Place a marker at the clicked location
-    userLat = latlng.lat;
-    userLong = latlng.lng;
-    //console.log("Coordinates: " + latlng.lat + ", " + latlng.lng); // Log coordinates to console
-    //alert("Coordinates: " + latlng.lat + ", " + latlng.lng); // Show coordinates in an alert
-  });
+  // Wait for the document to fully load before initializing the Leaflet map
+  document.addEventListener("DOMContentLoaded", function () {
+    // Initialize Leaflet map 
+    console.log("reachedreachedreached")
+    var map = L.map('map').setView([20, 0], 2); // World view with center at [20, 0] and zoom level 2
 
 
-    submitBtn.addEventListener("click",()=>{
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Add a click event listener to the Leaflet map
+    map.on('click', function (e) {
+      var latlng = e.latlng; // Get the coordinates of the clicked point
+      L.marker(latlng).addTo(map); // Place a marker at the clicked location
+      userLat = latlng.lat;
+      userLong = latlng.lng;
+      //console.log("Coordinates: " + latlng.lat + ", " + latlng.lng); // Log coordinates to console
+      //alert("Coordinates: " + latlng.lat + ", " + latlng.lng); // Show coordinates in an alert
+
+    });
+
+    submitBtn.addEventListener("click", () => {
       alert(`You Picked Lat: ${userLat}, Long: ${userLong}`);
     })
-});
+  });
 
 
 
