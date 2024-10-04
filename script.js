@@ -8,6 +8,8 @@ let userLong = 0;
 const submitBtn = document.getElementById("submit");
 const para = document.getElementById("paragraph");
 para.innerHTML = "CHANGED";
+const map = document.getElementById("map");
+
 let encodedCountry;
 let url;
 cities = ["New%20York", "Los%20Angeles", "Chicago", "Toronto", "Mexico%20City", "Houston", "Vancouver",
@@ -395,16 +397,44 @@ async function startProcess() {
     // Initialize Leaflet map 
     console.log("reachedreachedreached")
     var map = L.map('map').setView([20, 0], 2); // World view with center at [20, 0] and zoom level 2
+    L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoicmJoaXJ1ZCIsImEiOiJjbTF1NzZ3NDMwYTBtMmpxMzFsc25zcWI3In0.D0zCMdlhuyKVDAWG3zydKA', {
+      attribution: '© Mapbox © OpenStreetMap',
+      tileSize: 512,
+      zoomOffset: -1,
+      maxZoom: 18
+  }).addTo(map);
 
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+   /*L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+    }).addTo(map);*/
+    document.getElementById('map').addEventListener('mouseenter', function() {
+      setTimeout(function() {
+          map.invalidateSize(); 
+      }, 100); 
+      submitBtn.style.display = 'block';
+      submitBtn.style.bottom = '620px';
+      submitBtn.style.left = '1100px';
+  });
 
-    // Add a click event listener to the Leaflet map
+  document.getElementById('map').addEventListener('mouseleave', function() {
+    // Hide the button and revert properties
+ 
+    submitBtn.style.bottom = '6220px';
+    submitBtn.style.left = '1100px';
+
+});
+
+    let marker; 
+    
     map.on('click', function (e) {
-      var latlng = e.latlng; // Get the coordinates of the clicked point
-      L.marker(latlng).addTo(map); // Place a marker at the clicked location
+      var latlng = e.latlng; 
+    
+      if (marker) {
+        map.removeLayer(marker);
+      }
+    
+      marker = L.marker(latlng).addTo(map);
+    
       userLat = latlng.lat;
       userLong = latlng.lng;
       //console.log("Coordinates: " + latlng.lat + ", " + latlng.lng); // Log coordinates to console
@@ -412,10 +442,83 @@ async function startProcess() {
 
     });
 
+    //ClickAnswer
+
+
     submitBtn.addEventListener("click", () => {
-      alert(`You Picked Lat: ${userLat}, Long: ${userLong}`);
+      //alert(`You Picked Lat: ${userLat}, Long: ${userLong}`);
+      let userdistance = haversineDistance(latitude,longitude,userLat,userLong);
+      alert(`You were ${userdistance} miles off`);
+      
+
+      ActualLatLong = {
+        lat: latitude,
+        lng: longitude
+      }
+      //Set up red point mark to mark the actual location
+      var redIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        iconSize: [25, 41], 
+        iconAnchor: [12, 41], 
+        popupAnchor: [1, -34], 
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.4/images/marker-shadow.png',
+        shadowSize: [41, 41] 
+    });
+      ActualLocationMarker = L.marker(ActualLatLong,{icon: redIcon}).addTo(map);
+
+    })
+
+    //SpacebarAnswer
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key===" "){
+      //alert(`You Picked Lat: ${userLat}, Long: ${userLong}`);
+      let userdistance = haversineDistance(latitude,longitude,userLat,userLong);
+      alert(`You were ${userdistance} miles off`);
+      
+
+      ActualLatLong = {
+        lat: latitude,
+        lng: longitude
+      }
+      //Set up red point mark to mark the actual location
+      var redIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        iconSize: [25, 41], 
+        iconAnchor: [12, 41], 
+        popupAnchor: [1, -34], 
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.4/images/marker-shadow.png',
+        shadowSize: [41, 41] 
+    });
+      ActualLocationMarker = L.marker(ActualLatLong,{icon: redIcon}).addTo(map);
+
+      }
+
+
     })
   });
+  function haversineDistance(lat1, lon1, lat2, lon2) {
+    
+    function toRadians(degrees) {
+        return degrees * (Math.PI / 180);
+    }
+
+    const R = 3959; 
+
+    const dLat = toRadians(lat2 - lat1);
+    const dLon = toRadians(lon2 - lon1);
+
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    // Distance in miles
+    const distance = R * c;
+
+    return distance;
+}
 
 
 
