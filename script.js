@@ -13,7 +13,7 @@ let streetViewStatus = false;
 
 let encodedCountry;
 let url;
-cities = ["New%20York","New%20Delhi" "Los%20Angeles", "Chicago", "Toronto", "Mexico%20City", "Houston", "Vancouver",
+cities = ["New%20York","New%20Delhi", "Los%20Angeles", "Chicago", "Toronto", "Mexico%20City", "Houston", "Vancouver",
   "San%20Francisco", "Montreal", "Miami", "São%20Paulo", "Buenos%20Aires", "Rio%20de%20Janeiro",
   "Santiago", "Bogotá", "Lima", "Caracas", "Medellín", "Montevideo", "Quito", "London",
   "Paris", "Berlin", "Madrid", "Rome", "Amsterdam", "Vienna", "Zurich", "Warsaw",
