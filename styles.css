@@ -36,7 +36,7 @@ body {
 #map {
   display: none;
   position: absolute;
-  bottom: 20px;
+  bottom: 50px;
   right: 20px;
   width: 300px;
   height: 200px;
@@ -46,24 +46,27 @@ body {
 }
 
 #map:hover {
-  width: 700px;
-  height: 600px;
+  width: 600px;
+  height: 400px;
 }
 
 #submit {
   
   position: fixed;     
-  bottom: 0px;         
-  left: 11030px;           
+  bottom: 5px;    
+  right: 30px;  
+  width: 280px;  
+  /*left: 11030px;           */
   z-index: 10000;       
   padding: 10px 20px;  
   font-size: 16px;     
-  background-color: #007bff; 
+  background-color: #6f42c1; 
   color: white;        
   border: none;         
-  border-radius: 5px;  
+  border-radius: 20px;  
   cursor:pointer;      
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); 
+  transition: width 0.5s, height 0.5s;
 }
 
 
@@ -136,4 +139,8 @@ body {
     transform: rotate(-360deg);
     opacity: 0;
   }
+}
+
+#gameOverScreen {
+  display: none;
 }

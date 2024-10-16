@@ -32,17 +32,26 @@
 
   
   
-
   <div id="pano"></div>
-  <div id="map">
-   
+
+  <div id="parentMap">
+    <div id="map"></div>
+    <div id = "submitbtn">
+      <button type = "button" id = "submit">Submit</button>
+    </div>
   </div>
 
+<div id="gameOverScreen">
+  <h1 id="gameOverMessage" style="text-align: center; margin-top: 20px;">Game Over!</h1>
+  <p id="Points" style="text-align: center;"> </p>
+  <p id="Distance" style="text-align: center;"></p>
+  <button id="playAgain">Play Again!</button>
+</div>
 
 
-  <div id = "submitbtn">
-    <button type = "button" id = "submit">Submit</button>
-  </div>
+
+
+  
 
   <!-- 
       The `defer` attribute causes the script to execute after the full HTML

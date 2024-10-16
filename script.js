@@ -7,8 +7,13 @@ let userLat = 0;
 let userLong = 0;
 const submitBtn = document.getElementById("submit");
 const para = document.getElementById("paragraph");
-
+const gameDisplay = document.getElementById("gameDisplay");
+const gameOverScreen = document.getElementById("gameOverScreen")
+let GameOver = false;
+let marker; 
+var latlng;
 let streetViewStatus = false;
+const parentMap = document.getElementById("parentMap");
 //const map = document.getElementById("map");
 
 let encodedCountry;
@@ -440,42 +445,61 @@ async function startProcess() {
    /*L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);*/
-    document.getElementById('map').addEventListener('mouseenter', function() {
+    document.getElementById('parentMap').addEventListener('mouseenter', function() {
+      if(!GameOver){
+        document.getElementById('map').style.width = '600px';
+        document.getElementById('map').style.height = '400px';
+      
+      
+  
 
 
-      setTimeout(function() {
-          map.invalidateSize(); 
-      }, 100); 
-      submitBtn.style.display = 'block';
-      submitBtn.style.bottom = '620px';
-      submitBtn.style.left = '1100px';
+        setTimeout(function() {
+            map.invalidateSize(); 
+        }, 100); 
+        submitBtn.style.display = 'block';
+        submitBtn.style.bottom = '5px';
+        submitBtn.style.right = '30px';
+        submitBtn.style.width = '580px';
+    }
+
 
   });
 
-  document.getElementById('map').addEventListener('mouseleave', function() {
+  document.getElementById('parentMap').addEventListener('mouseleave', function() {
     // Hide the button and revert properties
+    if (!GameOver) {
+      submitBtn.style.width = '280px';
+      document.getElementById('map').style.width = '300px';
+      document.getElementById('map').style.height = '200px';
+    }
+    
+
+    
  
-    submitBtn.style.bottom = '6220px';
-    submitBtn.style.left = '1100px';
+    /*submitBtn.style.bottom = '6220px'; //Random out of screen coordinates
+    submitBtn.style.left = '1100px';*/
 
 });
 
-    let marker; 
+    
     
     map.on('click', function (e) {
-      var latlng = e.latlng; 
+      if (!GameOver) {
+        latlng = e.latlng; 
     
-      if (marker) {
-        map.removeLayer(marker);
+        if (marker) {
+          map.removeLayer(marker);
+        }
+      
+        marker = L.marker(latlng).addTo(map);
+      
+        userLat = latlng.lat;
+        userLong = latlng.lng;
+        console.log(`Lat:${userLat}, Long:${userLong}`)
+        //console.log("Coordinates: " + latlng.lat + ", " + latlng.lng); // Log coordinates to console
+        //alert("Coordinates: " + latlng.lat + ", " + latlng.lng); // Show coordinates in an alert
       }
-    
-      marker = L.marker(latlng).addTo(map);
-    
-      userLat = latlng.lat;
-      userLong = latlng.lng;
-      //console.log("Coordinates: " + latlng.lat + ", " + latlng.lng); // Log coordinates to console
-      //alert("Coordinates: " + latlng.lat + ", " + latlng.lng); // Show coordinates in an alert
-
     });
 
     //ClickAnswer
@@ -483,9 +507,22 @@ async function startProcess() {
 
     submitBtn.addEventListener("click", () => {
       //alert(`You Picked Lat: ${userLat}, Long: ${userLong}`);
+      GameOver = true;
       let userdistance = haversineDistance(latitude,longitude,userLat,userLong);
-      alert(`You were ${userdistance} miles off`);
+      document.getElementById('Distance').innerHTML = `You were ${userdistance} miles off!`;
+      //alert(`You were ${userdistance} miles off`);
       
+      document.getElementById("pano").style.display = 'None';
+      submitBtn.style.display = "None";
+      gameOverScreen.style.display = "block";
+      document.getElementById('map').style.width = "60%";
+      document.getElementById('map').style.height = "45%";
+      document.getElementById('map').style.bottom = "50%";
+      document.getElementById('map').style.top = "30%";
+      document.getElementById('map').style.right = "20.5%";
+      //document.getElementById('map').style.left = "50%";
+
+
 
       ActualLatLong = {
         lat: latitude,
@@ -502,20 +539,28 @@ async function startProcess() {
     });
       ActualLocationMarker = L.marker(ActualLatLong,{icon: redIcon}).addTo(map);
 
+      map.removeLayer(marker);
+      console.log("SECOND LATLNG: ", latlng);
+      marker = L.marker(latlng).addTo(map);
+
+      
     })
 
     //SpacebarAnswer
 
     document.addEventListener("keydown", (event) => {
-      document.getElementById('map').style.width = "700px";
-      document.getElementById('map').style.height = "600px";
-
-
       if (event.key===" "){
       //alert(`You Picked Lat: ${userLat}, Long: ${userLong}`);
+      GameOver = true;
       let userdistance = haversineDistance(latitude,longitude,userLat,userLong);
       alert(`You were ${userdistance} miles off`);
       
+      document.getElementById("pano").style.display = 'None';
+      submitBtn.style.display = "None";
+      gameOverScreen.style.display = "block";
+      document.getElementById('map').style.width = "60%";
+      document.getElementById('map').style.height = "45%";
+      document.getElementById('map').style.margin= "auto";
 
       ActualLatLong = {
         lat: latitude,
@@ -531,6 +576,9 @@ async function startProcess() {
         shadowSize: [41, 41] 
     });
       ActualLocationMarker = L.marker(ActualLatLong,{icon: redIcon}).addTo(map);
+
+      map.removeLayer(marker);
+      marker = L.marker(latlng).addTo(map);
 
       }
 
