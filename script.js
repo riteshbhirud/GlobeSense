@@ -44,7 +44,7 @@ cities = ["New%20York","New%20Delhi", "Los%20Angeles", "Chicago", "Toronto", "Me
   "Dresden", "Hannover", "Rotterdam", "The%20Hague", "Utrecht", "Brussels", "Antwerp", 
   "Ghent", "Bruges", "Copenhagen", "Stockholm", "Gothenburg", "Malmö", "Helsinki", 
   "Tallinn", "Riga", "Vilnius", "Prague", "Bratislava", "Budapest", "Ljubljana", 
-  "Zagreb", "Belgrade", "Sofia", "Bucharest", "Skopje", "Tirana", "Podgorica", 
+  "Zagreb", "Belgrade", "Sofia", "Bucharest", "Skopje", "Tirana", "DAV Aundh Pune Maharashtra", "Podgorica", 
   "Sarajevo", "Luxembourg", "Reykjavik", "Dublin", "Edinburgh", "Glasgow", "Cardiff", 
   "Belfast", "Lisbon", "Porto", "Valencia", "Seville", "Malaga", "Bilbao", 
   "Granada", "Palermo", "Naples", "Florence", "Venice", "Milan", "Turin", 
@@ -54,14 +54,14 @@ cities = ["New%20York","New%20Delhi", "Los%20Angeles", "Chicago", "Toronto", "Me
   "Matara", "Badulla", "Embilipitiya", "Ratnapura", "Habarana", "Negombo", 
   "Chilaw", "Vavuniya", "Matale", "Avissawella", "Tangalle", "Moratuwa", 
   "Brasilia", "Recife", "Curitiba", "Salvador", "Porto%20Alegre", "Fortaleza",
-  "Brasov", "Cluj-Napoca", "Constanta", "Timișoara", "Sibiu", "Debrecen", "Szeged",
+  "Brasov", "Cluj-Napoca", "Constanta", "Timișoara", "Sibiu", "Debrecen", "Szeged","Statue of Unity",
   "Miskolc", "Zaragoza", "Cordoba", "Toledo", "Alicante", "Malaga", "Granada",
   "Valencia", "Bremen", "Nuremberg", "Dortmund", "Essen", "Bochum", "Leverkusen",
   "Duisburg", "Wuppertal", "Bielefeld", "Münster", "Krakow", "Wroclaw", "Lodz",
   "Katowice", "Gdansk", "Szczecin", "Poznan", "Vilnius", "Kaunas", "Klaipeda", 
-  "Riga", "Tallinn", "Tartu", "Pärnu", "Antwerp", "Ghent", "Bruges", "Namur", 
+  "Riga", "Tallinn", "Tartu", "Pärnu", "Antwerp", "Ghent", "Niagara Falls","Bruges", "Namur", 
   "Liège", "Arlon", "Charleroi", "Mons", "Leuven", "Mechelen", "Namur", "Brest", 
-  "Nantes", "Rennes", "Biarritz", "Toulon", "Dijon", "Grenoble", "Bastia"]
+  "Nantes", "Rennes", "Biarritz", "Toulon", "Dijon", "Grenoble", "Bastia","SNBP International School Rahatani Pune Maharashtra","Rose Icon Pune Maharashtra India","Boston","Amherst","Lowell","1400 Gorham St","1400 Gorham St Lowell MA","Elm Hall Amherst MA"]
 
 
 
@@ -155,6 +155,8 @@ async function getRandomCoordinates() {
   console.log("ORIGINAL",choice);*/
 
   let city = cities[Math.floor(Math.random() * cities.length)]
+  
+
 
   console.log("city:", city)
   const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
@@ -449,6 +451,7 @@ async function startProcess() {
       if(!GameOver){
         document.getElementById('map').style.width = '600px';
         document.getElementById('map').style.height = '400px';
+        submitBtn.style.display = 'block';
       
       
   
@@ -472,6 +475,7 @@ async function startProcess() {
       submitBtn.style.width = '280px';
       document.getElementById('map').style.width = '300px';
       document.getElementById('map').style.height = '200px';
+      //submitBtn.style.display = 'block';
     }
     
 

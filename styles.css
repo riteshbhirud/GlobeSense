@@ -51,7 +51,7 @@ body {
 }
 
 #submit {
-  
+  display: none;
   position: fixed;     
   bottom: 5px;    
   right: 30px;  
