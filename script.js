@@ -13,6 +13,8 @@ let GameOver = false;
 let marker; 
 var latlng;
 let streetViewStatus = false;
+let songName;
+let artistName;
 const parentMap = document.getElementById("parentMap");
 //const map = document.getElementById("map");
 
@@ -340,10 +342,11 @@ async function startProcess() {
           }
           const trackData = await trackResponse.json();
           randSong = Math.floor(Math.random() * trackData.results[0].tracks.length)
-
+          songName = trackData.results[0].tracks[randSong].name
+          artistName = data.results[randArtist].name
           console.log("track data:", trackData);
-          console.log("Artist name:", data.results[randArtist].name)
-          console.log(`Song name: ${trackData.results[0].tracks[randSong].name}`)
+          console.log("Artist name:", artistName)
+          console.log(`Song name: ${songName}`)
           url = trackData.results[0].tracks[randSong].audio;
           console.log("url:", url);
           //music.src = url;
@@ -505,15 +508,19 @@ async function startProcess() {
         //alert("Coordinates: " + latlng.lat + ", " + latlng.lng); // Show coordinates in an alert
       }
     });
+  
 
+  
     //ClickAnswer
 
-
+  
     submitBtn.addEventListener("click", () => {
       //alert(`You Picked Lat: ${userLat}, Long: ${userLong}`);
       GameOver = true;
       let userdistance = haversineDistance(latitude,longitude,userLat,userLong);
       document.getElementById('Distance').innerHTML = `You were ${userdistance} miles off!`;
+      document.getElementById('songName').innerHTML = `Song: '${songName}' by '${artistName}'`;
+      console.log(document.getElementById('songName').innerHTML);
       //alert(`You were ${userdistance} miles off`);
       
       document.getElementById("pano").style.display = 'None';
@@ -524,6 +531,7 @@ async function startProcess() {
       document.getElementById('map').style.bottom = "50%";
       document.getElementById('map').style.top = "30%";
       document.getElementById('map').style.right = "20.5%";
+      
       //document.getElementById('map').style.left = "50%";
 
 

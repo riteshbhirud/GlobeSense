@@ -4,10 +4,10 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: black;
   
-
+  background-color: darkorange;
 }
+
 .navbar-purple {
   background-color: #6f42c1; 
   margin: 0;
@@ -20,6 +20,8 @@ body {
   margin: 0;
   padding: 0;
 }
+
+
 
 
 #pano {
@@ -144,3 +146,29 @@ body {
 #gameOverScreen {
   display: none;
 }
+
+#playAgain{
+  position: absolute;
+  top: 80%;
+  left: 43%;
+
+
+  
+  border-radius: 20px;
+  background-color: #6f42c1;
+  color: white;
+  border: none;
+  width: 200px;
+  height: 40px;
+}
+
+
+#songName{
+  position: absolute;
+  top:20%;
+  left: 38%;
+  margin-top: 20px;
+
+}
+
+
