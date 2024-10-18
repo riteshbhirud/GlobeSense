@@ -78,6 +78,7 @@ body {
   left: 50%;
   margin-top: 26px;
   margin-left: -12px;
+  z-index: 100;
  
 }
 
@@ -87,6 +88,7 @@ body {
   left: 50%;
   margin-top: -50px;
   margin-left: -50px;
+  z-index: 100;
  
 }
 
@@ -95,6 +97,7 @@ body {
   width: 100px;
   border: #bb5f27 solid 4px;
   border-radius: 200px;
+  z-index: 100;
   
 }
 
@@ -113,12 +116,14 @@ body {
   height: 108px;
   width: 108px;
   animation: drive 3s linear infinite;
+  z-index: 100;
 }
 
 #bike {
   height: 24px;
   width: 25px;
   background-image: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/133687/motorbike.png");
+  z-index: 100;
 }
 
 @keyframes drive {
