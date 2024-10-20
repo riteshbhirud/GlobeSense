@@ -4,6 +4,7 @@
   "description": "Guess the place using the panoramic view and music from that place!",
   "main": "script.js",
   "scripts": {
+    "start": "node app.js", 
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
