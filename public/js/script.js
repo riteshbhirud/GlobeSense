@@ -1,3 +1,4 @@
+
 let latitude;
 let longitude;
 let retryCount = 0;
