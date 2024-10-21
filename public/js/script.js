@@ -345,7 +345,7 @@ async function startProcessRadio() {
     if (data.length > 0) {
       url = data[0].url_resolved;
       console.log(url);
-      //music.src = url;
+      music.src = url;
     } else {
       console.warn('No stations found for the selected country.');
     }
