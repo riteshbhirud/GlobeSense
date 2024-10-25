@@ -190,7 +190,8 @@ async function fetchCountry() {
 async function startProcess() {
   console.log("CALLING START PROCESS FUNCTION")
   const country = await fetchCountry();
-  if (country) {
+  console.log(country)
+  //if (country) {
     encodedCountry = encodeURIComponent(country);
     console.log("Country:", country);
 
@@ -206,6 +207,7 @@ async function startProcess() {
       const data = await response.json();
 
       if (data.results.length === 0) {
+        console.log("JAMENDO NOT FOUND, BACKUP RADIO IN USE")
         startProcessRadio()
       }
       else {
@@ -250,7 +252,7 @@ async function startProcess() {
     } catch (error) {
       console.error('Music Fetch error:', error);
     }
-  }
+  //}
 }
 
 // Start the process by fetching the country and then the music
