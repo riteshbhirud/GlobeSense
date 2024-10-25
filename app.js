@@ -34,6 +34,9 @@ app.get('/test', (req, res) => {
 app.get('/game', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'index.html'));
   });
+app.get('/airport', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'airportMode.html'));
+});
 
 app.get('/register', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'signUp.html'));

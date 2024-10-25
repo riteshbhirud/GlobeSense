@@ -199,7 +199,11 @@ async function fetchCountry() {
   }
 
   retryCount++;
-  const coordinates = await getRandomCoordinates();
+  const coordinates = {
+    latitude: 51.50341,
+    longitude: 0.04877
+  }
+  //const coordinates = await getRandomCoordinates();
   console.log("fetchCountry coordinates", coordinates);
   latitude = coordinates.latitude;
   longitude = coordinates.longitude;
