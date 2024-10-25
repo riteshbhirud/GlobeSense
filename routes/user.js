@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../models/user'); 
+const cookieParser = require('cookie-parser');
+const app = express();
+app.use(cookieParser());
 
 mongoose.connect("mongodb+srv://globesense0:eLmy07cxM7kqH8Bp@cluster0.dvqwx.mongodb.net/Users?retryWrites=true&w=majority&appName=Cluster0");
 
@@ -52,6 +55,16 @@ router.post('/login', async (req, res) => {
       res.status(401).json({ msg: 'Username does not exist.' });
     }
     else if (await bcrypt.compare(req.body.password, user.password)){
+      const sessionToken = `${username}2`
+      res.cookie('session',sessionToken,{
+        httpOnly: true,
+        secure: true,
+        maxAge: 7200000  //2hrs
+
+      });
+
+    
+
       res.status(201).json({ msg: 'User signed in successfully.' });
     }
     else {

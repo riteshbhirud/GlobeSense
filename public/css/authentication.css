@@ -23,44 +23,30 @@ body {
     font-size: 70px;
 }
 
-#playButtonDiv {
-    max-width: fit-content;
-    margin-inline: auto;
-    bottom: 50px;
+#createAcct{
+    color: yellow;
+    text-align: center;
+
+
 }
 
-#buttonsContainer {
+.inputField {
+    border-radius: 30px;
+}
+
+.formContainer {
     display: flex;
-    flex-flow: row wrap;
+    flex-flow: column wrap;
     justify-content: center;
     align-items: center;
     align-content: center;
     gap: 20px;
 }
 
-.playButton {
-    border-radius: 30px;
-    border: none;
-    width: 150px;
-    background-color: yellow;
-    color: #6f42c1;
-    font-weight: bold;
+.inputLabels {
+    color: yellow;
+    text-align: center;
+    font-size: 18px;
 }
 
-.playIcon {
-    height: 40px;
-    width: 40px;
-}
 
-.nav-item {
-    margin-left: 15px;
-}
-
-.nav-link {
-    color: yellow !important;
-    font-weight: bold !important;
-}
-
-.nav-link:hover {
-    border-bottom: 1px solid yellow;
-}

@@ -1,3 +1,4 @@
+
 const express = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const path = require('path');
@@ -8,6 +9,10 @@ app.use(express.json())
 const userRoutes = require('./routes/user'); 
 
 app.use('/api/users', require('./routes/user'));
+//Cookie setup
+
+
+
 const port = process.env.PORT || 5550;
 const uri = "mongodb+srv://globesense0:eLmy07cxM7kqH8Bp@cluster0.dvqwx.mongodb.net/Users?retryWrites=true&w=majority&appName=Cluster0";
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -36,6 +41,10 @@ app.get('/game', (req, res) => {
   });
 app.get('/airport', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'airportMode.html'));
+});
+
+app.get('/mall', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'malls.html'));
 });
 
 app.get('/register', (req, res) => {

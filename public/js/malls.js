@@ -48,101 +48,115 @@ let encodedCountry;
 let url;
 
 cities = [
-  // Existing Airports
-  {
-    "latitude": 51.503897,
-    "longitude": 0.049631
-  },
-  {
-    "latitude": 19.096821,
-    "longitude": 72.875406
-  },
-  {
-    "latitude": 33.9416,
-    "longitude": -118.4085
-  },
-  {
-    "latitude": 51.4700,
-    "longitude": -0.4543
-  },
-  {
-    "latitude": 35.5494,
-    "longitude": 139.7798
-  },
-  {
-    "latitude": 25.2532,
-    "longitude": 55.3657
-  },
-  {
-    "latitude": 50.0379,
-    "longitude": 8.5622
-  },
-  {
-    "latitude": 1.3644,
-    "longitude": 103.9915
-  },
-  {
-    "latitude": 40.6413,
-    "longitude": -73.7781
-  },
-  {
-    "latitude": 49.0097,
-    "longitude": 2.5479
-  },
-  {
-    "latitude": -33.9399,
-    "longitude": 151.1753
-  },
-  {
-    "latitude": 22.3080,
-    "longitude": 113.9185
-  },
-  
-  // Additional Major Airports
-  {
-    "latitude": 35.2140,
-    "longitude": -80.9431 // Charlotte Douglas International Airport
-  },
-  {
-    "latitude": -22.8090,
-    "longitude": -43.2506 // Galeão International Airport, Rio de Janeiro
-  },
-  {
-    "latitude": -34.8222,
-    "longitude": -58.5358 // Ezeiza International Airport, Buenos Aires
-  },
-  {
-    "latitude": 35.2140,
-    "longitude": -80.9431 // Charlotte Douglas International Airport
-  },
-  {
-    "latitude": -22.8100,
-    "longitude": -43.2499 // São Paulo–Guarulhos International Airport
-  },
-
-
-  // Major Subway/Railway Stations
-  {
-    "latitude": 48.8763,
-    "longitude": 2.3554 // Gare du Nord, Paris
-  },
-  {
-    "latitude": 40.7506,
-    "longitude": -73.9935 // Penn Station, New York
-  },
-  {
-    "latitude": 35.6814,
-    "longitude": 139.7670 // Tokyo Station, Japan
-  },
-  {
-    "latitude": 31.2324,
-    "longitude": 121.4692 // Shanghai Hongqiao Railway Station, China
-  },
-  {
-    "latitude": 55.7766,
-    "longitude": 37.6569 // Leningradsky Station, Moscow
-  }]
-
+    {
+      "latitude": 25.1985,
+      "longitude": 55.2795 // The Dubai Mall, UAE
+    },
+    {
+      "latitude": 1.3004,
+      "longitude": 103.8454 // VivoCity, Singapore
+    },
+    {
+      "latitude": 35.6946,
+      "longitude": 139.7026 // Shibuya PARCO, Tokyo, Japan
+    },
+    {
+      "latitude": 13.7466,
+      "longitude": 100.5346 // Siam Paragon, Bangkok, Thailand
+    },
+    {
+      "latitude": 33.5020,
+      "longitude": -111.9261 // Scottsdale Fashion Square, Scottsdale, USA
+    },
+    {
+      "latitude": 40.7580,
+      "longitude": -73.9855 // Westfield World Trade Center, New York City, USA
+    },
+    {
+      "latitude": 22.3053,
+      "longitude": 114.1725 // Harbour City, Hong Kong
+    },
+    {
+      "latitude": -33.8668,
+      "longitude": 151.2093 // Westfield Sydney, Australia
+    },
+    {
+      "latitude": 19.4337,
+      "longitude": -99.1386 // Centro Santa Fe, Mexico City, Mexico
+    },
+    {
+      "latitude": 37.7846,
+      "longitude": -122.4069 // Westfield San Francisco Centre, San Francisco, USA
+    },
+    {
+      "latitude": 41.0435,
+      "longitude": 28.9896 // Istanbul Cevahir Mall, Istanbul, Turkey
+    },
+    {
+      "latitude": 51.5145,
+      "longitude": -0.1170 // Westfield London, London, UK
+    },
+    {
+      "latitude": -23.5666,
+      "longitude": -46.6485 // Shopping Cidade São Paulo, São Paulo, Brazil
+    },
+    {
+      "latitude": 3.1579,
+      "longitude": 101.7123 // Suria KLCC, Kuala Lumpur, Malaysia
+    },
+    {
+      "latitude": -26.1341,
+      "longitude": 28.0535 // Sandton City, Johannesburg, South Africa
+    },
+    {
+      "latitude": 45.4642,
+      "longitude": 9.1900 // Galleria Vittorio Emanuele II, Milan, Italy
+    },
+    {
+      "latitude": 35.6586,
+      "longitude": 139.7433 // Roppongi Hills, Tokyo, Japan
+    },
+    {
+      "latitude": 21.0285,
+      "longitude": 105.8542 // Vincom Mega Mall Royal City, Hanoi, Vietnam
+    },
+    {
+      "latitude": -6.2245,
+      "longitude": 106.8451 // Grand Indonesia, Jakarta, Indonesia
+    },
+    {
+      "latitude": 25.0401,
+      "longitude": 121.5645 // Taipei 101 Mall, Taipei, Taiwan
+    },
+    {
+      "latitude": -8.6965,
+      "longitude": 115.1675 // Discovery Shopping Mall, Bali, Indonesia
+    },
+    {
+      "latitude": 39.9123,
+      "longitude": 116.4108 // China World Mall, Beijing, China
+    },
+    {
+      "latitude": 43.6677,
+      "longitude": -79.3948 // Toronto Eaton Centre, Toronto, Canada
+    },
+    {
+      "latitude": 34.0522,
+      "longitude": -118.2437 // The Grove, Los Angeles, USA
+    },
+    {
+      "latitude": 48.8566,
+      "longitude": 2.3522 // Galeries Lafayette, Paris, France
+    },
+    {
+      "latitude": 32.7157,
+      "longitude": -117.1611 // Fashion Valley, San Diego, USA
+    },
+    {
+      "latitude": 38.7072,
+      "longitude": -9.1355 // Centro Colombo, Lisbon, Portugal
+    }
+  ]
 
 
 //const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
