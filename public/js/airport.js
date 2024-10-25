@@ -27,7 +27,7 @@ let panorama;
 
 function timer1() {
   console.log("TIMER FUNCTION BEING CALLED")
-  var sec = 30;
+  var sec = 300;
   timer = setInterval(function () {
     let minutes = Math.floor(sec / 60)
     let seconds = sec - minutes * 60
@@ -46,50 +46,57 @@ function timer1() {
 
 let encodedCountry;
 let url;
-cities = ["New%20York", "New%20Delhi", "Los%20Angeles", "Chicago", "Toronto", "Mexico%20City", "Houston", "Vancouver",
-  "San%20Francisco", "Montreal", "Miami", "São%20Paulo", "Buenos%20Aires", "Rio%20de%20Janeiro",
-  "Santiago", "Bogotá", "Lima", "Caracas", "Medellín", "Montevideo", "Quito", "London",
-  "Paris", "Berlin", "Madrid", "Rome", "Amsterdam", "Vienna", "Zurich", "Warsaw",
-  "Oslo", "Tokyo", "Shanghai", "Beijing", "Seoul", "Dharavi", "Bangkok", "Jakarta",
-  "Manila", "Singapore", "Kuala%20Lumpur", "Cairo", "Nairobi", "Johannesburg",
-  "Accra", "Algiers", "Addis%20Ababa", "Casablanca", "Kinshasa", "Dakar", "Sydney",
-  "Melbourne", "Brisbane", "Perth", "Auckland", "Wellington", "Canberra", "Adelaide",
-  "Hobart", "Suva", "Istanbul", "Moscow", "Kiev", "St.%20Petersburg", "Dubai", "Abu%20Dhabi",
-  "Tehran", "Riyadh", "Tel%20Aviv", "Jerusalem", "Doha", "Kuwait%20City", "Baku", "Ankara",
-  "Baghdad", "Damascus", "Amman", "Muscat", "Beirut", "Manama", "Dhaka", "Karachi",
-  "Islamabad", "Colombo", "Kathmandu", "Thimphu", "Male", "Hanoi", "Ho%20Chi%20Minh%20City",
-  "Phnom%20Penh", "Vientiane", "Yangon", "Naypyidaw", "Busan", "Taipei", "Tokyo", "Osaka",
-  "Nagoya", "Sapporo", "Kyoto", "Shenzhen", "Guangzhou", "Chengdu", "Wuhan",
-  "Atlanta", "Boston", "Dallas", "Phoenix", "Philadelphia", "San%20Diego", "San%20Jose",
-  "Austin", "Denver", "Orlando", "Las%20Vegas", "Tampa", "Charlotte", "Detroit",
-  "Seattle", "Washington%20D.C.", "Baltimore", "Minneapolis", "Cleveland", "Pittsburgh",
-  "Cincinnati", "Indianapolis", "Kansas%20City", "Milwaukee", "St.%20Louis", "Buffalo",
-  "Salt%20Lake%20City", "Columbus", "Richmond", "Birmingham", "Tucson", "Portland",
-  "Sacramento", "Reno", "Anchorage", "Honolulu", "Memphis", "Louisville", "New%20Orleans",
-  "Oklahoma%20City", "Albuquerque", "El%20Paso", "Raleigh", "Nashville", "Tallahassee",
-  "Montpellier", "Strasbourg", "Marseille", "Lyon", "Nice", "Bordeaux", "Toulouse",
-  "Munich", "Frankfurt", "Hamburg", "Cologne", "Düsseldorf", "Stuttgart", "Leipzig",
-  "Dresden", "Hannover", "Rotterdam", "The%20Hague", "Utrecht", "Brussels", "Antwerp",
-  "Ghent", "Bruges", "Copenhagen", "Stockholm", "Gothenburg", "Malmö", "Helsinki",
-  "Tallinn", "Riga", "Vilnius", "Prague", "Bratislava", "Budapest", "Ljubljana",
-  "Zagreb", "Belgrade", "Sofia", "Bucharest", "Skopje", "Tirana", "DAV Aundh Pune Maharashtra", "Podgorica",
-  "Sarajevo", "Luxembourg", "Reykjavik", "Dublin", "Edinburgh", "Glasgow", "Cardiff",
-  "Belfast", "Lisbon", "Porto", "Valencia", "Seville", "Malaga", "Bilbao",
-  "Granada", "Palermo", "Naples", "Florence", "Venice", "Milan", "Turin",
-  "Genoa", "Bologna", "Verona", "Zurich", "Geneva", "Bern", "Basel", "Lausanne",
-  "Lugano", "Lucerne", "Hambantota", "Jaffna", "Trincomalee", "Batticaloa",
-  "Galle", "Kurunegala", "Kandy", "Polonnaruwa", "Sigiriya", "Anuradhapura",
-  "Matara", "Badulla", "Embilipitiya", "Ratnapura", "Habarana", "Negombo",
-  "Chilaw", "Vavuniya", "Matale", "Avissawella", "Tangalle", "Moratuwa",
-  "Brasilia", "Recife", "Curitiba", "Salvador", "Porto%20Alegre", "Fortaleza",
-  "Brasov", "Cluj-Napoca", "Constanta", "Timișoara", "Sibiu", "Debrecen", "Szeged", "Statue of Unity",
-  "Miskolc", "Zaragoza", "Cordoba", "Toledo", "Alicante", "Malaga", "Granada",
-  "Valencia", "Bremen", "Nuremberg", "Dortmund", "Essen", "Bochum", "Leverkusen",
-  "Duisburg", "Wuppertal", "Bielefeld", "Münster", "Krakow", "Wroclaw", "Lodz",
-  "Katowice", "Gdansk", "Szczecin", "Poznan", "Vilnius", "Kaunas", "Klaipeda",
-  "Riga", "Tallinn", "Tartu", "Pärnu", "Antwerp", "Ghent", "Niagara Falls", "Bruges", "Namur",
-  "Liège", "Arlon", "Charleroi", "Mons", "Leuven", "Mechelen", "Namur", "Brest",
-  "Nantes", "Rennes", "Biarritz", "Toulon", "Dijon", "Grenoble", "Bastia", "SNBP International School Rahatani Pune Maharashtra", "Rose Icon Pune Maharashtra India", "Boston", "Amherst", "Lowell", "1400 Gorham St", "1400 Gorham St Lowell MA", "Elm Hall Amherst MA"]
+
+cities = [{
+  latitude:51.503897,
+  longitude:0.049631
+},
+{
+  latitude:19.096821,
+  longitude:72.875406
+},
+{
+  latitude: 33.9416,
+  longitude: -118.4085
+},
+{
+  latitude: 51.4700,
+  longitude: -0.4543
+},
+{
+  latitude: 35.5494,
+  longitude: 139.7798
+},
+{
+  latitude: 25.2532,
+  longitude: 55.3657
+},
+{
+  latitude: 50.0379,
+  longitude: 8.5622
+},
+{
+  latitude: 1.3644,
+  longitude: 103.9915
+},
+{
+  latitude: 40.6413,
+  longitude: -73.7781
+},
+{
+  latitude: 49.0097,
+  longitude: 2.5479
+},
+{
+  latitude: -33.9399,
+  longitude: 151.1753
+},
+{
+  latitude: 22.3080,
+  longitude: 113.9185
+}
+
+]
 
 
 
@@ -124,72 +131,7 @@ function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function getRandomCoordinates() {
-  let geometry = null;
 
-  let city = cities[Math.floor(Math.random() * cities.length)]
-
-
-
-  console.log("city:", city)
-  const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
-
-  try {
-    const coordinatesResponse = await fetch(boundingBoxApiUrl)
-    if (!coordinatesResponse.ok) {
-      throw new Error('Network response was not ok');
-
-    }
-    const coordinatesData = await coordinatesResponse.json()
-
-    coordinates = coordinatesData[0].geojson.coordinates[0]
-    encodedCountry = encodeURIComponent(coordinatesData[0].address.country);
-    if (coordinates.length == 1) {
-      coordinates = coordinates[0]
-    }
-    //OSaka 00 0/1 !=1
-    //NY 000 0/1 ==1
-    latitude = coordinates[0][1]
-    longitude = coordinates[0][0]
-
-  } catch (error) {
-    console.error('Fetch error:', error);
-  }
-
-  console.log("ORIGINAL COORDINATES", latitude, longitude);
-
-  const roadApiUrl = `https://api.opencagedata.com/geocode/v1/json?q=${latitude},${longitude}&key=${openCageAPIKey}&language=en&roadinfo=1&pretty=1`;
- 
-
-  try {
-    const response = await fetch(roadApiUrl);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data = await response.json();
-    console.log(data)
-
-    if (data.results.length > 0) {
-      geometry = data.results[0].geometry;
-      console.log("CHANGED COORDINATE", geometry);
-      console.log(geometry.lat);
-      console.log(geometry.lng);
-      return {
-        latitude: geometry.lat,
-        longitude: geometry.lng
-      };
-    } else {
-      // Wait for 2 seconds before retrying with another random coordinate
-      await wait(2000);
-      return await getRandomCoordinates();
-    }
-  } catch (error) {
-    console.error('Fetch error:', error);
-    // Wait for 2 seconds before retrying on error
-    await wait(2000);
-    return await getRandomCoordinates(); // Retry on error
-  }
-}
 
 async function fetchCountry() {
   console.log("CALLING FETCH COUNTRY FUNCTION")
@@ -198,15 +140,22 @@ async function fetchCountry() {
     return null;
   }
 
+  let city = cities[Math.floor(Math.random() * cities.length)]
+  latitude = city.latitude;
+  longitude = city.longitude;
+
+
+
+
   retryCount++;
-  const coordinates = {
-    latitude: 51.50341,
-    longitude: 0.04877
-  }
+  /*const coordinates = {
+    latitude:city.latitude,
+    longitude:72.875406
+  }*/
   //const coordinates = await getRandomCoordinates();
-  console.log("fetchCountry coordinates", coordinates);
-  latitude = coordinates.latitude;
-  longitude = coordinates.longitude;
+  //console.log("fetchCountry coordinates", coordinates);
+  //latitude = coordinates.latitude;
+  //longitude = coordinates.longitude;
 
   try {
     const streetViewApiUrl = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${latitude},${longitude}&key=${googleAPIKey}&radius=100`;
