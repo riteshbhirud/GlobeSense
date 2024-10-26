@@ -27,8 +27,28 @@ let panorama;
 
 function timer1() {
   console.log("TIMER FUNCTION BEING CALLED")
-  var sec = 30;
+  var sec = 15;
   timer = setInterval(function () {
+
+    let navAnimationTime = 15 * sec/300;
+
+    if(navAnimationTime<2){
+      navAnimationTime=2;
+    }
+    
+    document.getElementById('nav').style.setProperty("--navAnimationTime", `${navAnimationTime}s`);
+    if(sec<=10){
+      //document.getElementById('nav').style.backgroundImage = "linear-gradient(135deg, #9d50bb, #ff0080)"
+      document.getElementById('nav').style.setProperty("--navAnimationTime", `1s`);
+      nav.style.background = "linear-gradient(135deg, #9d50bb, #ff0080)";
+      nav.style.backgroundSize = "400% 400%"; 
+      
+    }/*else{
+      document.getElementById('nav').style.setProperty("--navAnimationTime", `${navAnimationTime}s`);
+      
+    }*/
+   
+    
     let minutes = Math.floor(sec / 60)
     let seconds = sec - minutes * 60
     if (seconds < 10) {
