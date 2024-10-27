@@ -178,7 +178,7 @@ function wait(ms) {
 
 
 
-async function fetchCountry() {
+async function setCoordinates() {
   console.log("CALLING FETCH COUNTRY FUNCTION")
   if (retryCount >= maxRetries) {
     console.error('Max retry limit reached. Stopping further attempts.');
@@ -198,7 +198,7 @@ async function fetchCountry() {
     longitude:72.875406
   }*/
   //const coordinates = await getRandomCoordinates();
-  //console.log("fetchCountry coordinates", coordinates);
+  //console.log("setCoordinates coordinates", coordinates);
   //latitude = coordinates.latitude;
   //longitude = coordinates.longitude;
 
@@ -220,12 +220,12 @@ async function fetchCountry() {
       return encodedCountry;
     } else if (streetViewData.status === "ZERO_RESULTS") {
       console.warn('No Street View coverage at this location. Fetching new location...');
-      return fetchCountry();
+      return setCoordinates();
     }
   } catch (error) {
     console.error('Fetch error:', error);
     await wait(2000); // Retry after 2 seconds
-    return fetchCountry();
+    return setCoordinates();
   }
 
   return null; // Fallback in case of an unexpected failure
@@ -234,7 +234,7 @@ async function fetchCountry() {
 
 async function startProcess() {
   console.log("CALLING START PROCESS FUNCTION")
-  const country = await fetchCountry();
+  const country = await setCoordinates();
   console.log(country)
   //if (country) {
     encodedCountry = encodeURIComponent(country);
@@ -328,7 +328,7 @@ function initialize(lat, lng) {
 
 
 // Start the process by fetching the country
-/*let chosenCountry = fetchCountry();
+/*let chosenCountry = setCoordinates();
 chosenCountry = encodeURIComponent(chosenCountry);
 console.log("LASTcountry:", chosenCountry);*/
 

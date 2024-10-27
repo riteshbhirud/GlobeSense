@@ -6,6 +6,7 @@ const maxRetries = 20;
 
 
 let music;
+let score;
 let userLat = 0;
 let userLong = 0;
 const submitBtn = document.getElementById("submit");
@@ -21,13 +22,17 @@ let songName;
 let artistName;
 var timer;
 const parentMap = document.getElementById("parentMap");
+const navElement = document.getElementById('nav')
+const body = document.getElementsByTagName('body')[0]
 //const map = document.getElementById("map");
 let map;
 let panorama;
 
 function timer1() {
   console.log("TIMER FUNCTION BEING CALLED")
-  var sec = 15;
+  var sec = 300;
+  document.getElementById('nav').style.setProperty("--navAnimationTime", `${15 * sec/300}s`);
+  navElement.style.animation = "gradientAnimation var(--navAnimationTime) ease infinite";
   timer = setInterval(function () {
 
     let navAnimationTime = 15 * sec/300;
@@ -114,7 +119,7 @@ cities = ["New%20York", "New%20Delhi", "Los%20Angeles", "Chicago", "Toronto", "M
 
 
 //const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
-
+//https://nominatim.openstreetmap.org/reverse?lat=40.730610&lon=-73.935242&format=json&zoom=10&addressdetails=1
 
 //import {OPENCAGE_API_KEY, GEOCODE_API_KEY, GOOGLE_API_KEY, JAMENDO_CLIENT_ID} from "./config.js";
 
@@ -147,7 +152,8 @@ function wait(ms) {
 async function getRandomCoordinates() {
   let geometry = null;
 
-  let city = cities[Math.floor(Math.random() * cities.length)]
+  //let city = cities[Math.floor(Math.random() * cities.length)]
+  let city = "Amherst"
 
 
 
@@ -163,7 +169,9 @@ async function getRandomCoordinates() {
     const coordinatesData = await coordinatesResponse.json()
 
     coordinates = coordinatesData[0].geojson.coordinates[0]
+    console.log("OPENCAGE COUNTRY:", coordinatesData[0].address.country);
     encodedCountry = encodeURIComponent(coordinatesData[0].address.country);
+    console.log("ENCODED OPENCAGE COUNTRY:", encodedCountry);
     if (coordinates.length == 1) {
       coordinates = coordinates[0]
     }
@@ -211,7 +219,7 @@ async function getRandomCoordinates() {
   }
 }
 
-async function fetchCountry() {
+async function setCoordinates() {
   console.log("CALLING FETCH COUNTRY FUNCTION")
   if (retryCount >= maxRetries) {
     console.error('Max retry limit reached. Stopping further attempts.');
@@ -220,7 +228,7 @@ async function fetchCountry() {
 
   retryCount++;
   const coordinates = await getRandomCoordinates();
-  console.log("fetchCountry coordinates", coordinates);
+  console.log("setCoordinates coordinates", coordinates);
   latitude = coordinates.latitude;
   longitude = coordinates.longitude;
 
@@ -242,12 +250,12 @@ async function fetchCountry() {
       return encodedCountry;
     } else if (streetViewData.status === "ZERO_RESULTS") {
       console.warn('No Street View coverage at this location. Fetching new location...');
-      return fetchCountry();
+      return setCoordinates();
     }
   } catch (error) {
     console.error('Fetch error:', error);
     await wait(2000); // Retry after 2 seconds
-    return fetchCountry();
+    return setCoordinates();
   }
 
   return null; // Fallback in case of an unexpected failure
@@ -256,9 +264,9 @@ async function fetchCountry() {
 
 async function startProcess() {
   console.log("CALLING START PROCESS FUNCTION")
-  const country = await fetchCountry();
+  const country = await setCoordinates();
   if (country) {
-    encodedCountry = encodeURIComponent(country);
+    //encodedCountry = encodeURIComponent(country);
     console.log("Country:", country);
 
     //const musicApiUrl = `https://de1.api.radio-browser.info/json/stations/search?country=${encodedCountry}&tag=jazz&limit=1`;
@@ -347,7 +355,7 @@ function initialize(lat, lng) {
 
 
 // Start the process by fetching the country
-/*let chosenCountry = fetchCountry();
+/*let chosenCountry = setCoordinates();
 chosenCountry = encodeURIComponent(chosenCountry);
 console.log("LASTcountry:", chosenCountry);*/
 
@@ -520,15 +528,197 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 
 
 
-function endGame() {
+async function endGame() {
+
   //alert(`You Picked Lat: ${userLat}, Long: ${userLong}`);
   GameOver = true;
   document.getElementById('timer').style.display = "none";
   let userdistance = haversineDistance(latitude, longitude, userLat, userLong);
+
+  /*proportionRed = userdistance/12451
+  proportionGreen = 1 - proportionRed
+  red = 255*proportionRed
+  green = 255*proportionGreen
+  blue = 0
+  document.getElementById('nav').style.animation = "none";
+  document.getElementById('nav').style.background = "none";
+  document.getElementById('nav').style.setProperty("background", `rgb(${red}, ${green}, ${blue})`, "important");
+  console.log("COLOR: ", document.getElementById('nav').style.background)*/
+  
+  let isNull = false;
+  let countryMatch = false;
+  //Obtain the country of the user choice & actual
+  //Actual country is encodedCountry
+  let userCountry = await getCountry(userLat,userLong)
+  if(userCountry && encodedCountry){
+    countryMatch = userCountry === decodeURIComponent(encodedCountry);
+  } else{
+    isNull = true;
+  }
+
+  //Obtain the state of user choice & actual
+  let statesMatch = false;
+  let userState;
+  let actualState;
+  if(!isNull) {
+    userState = await getState(userLat, userLong);
+    actualState = await getState(latitude, longitude);
+    if (userState && actualState) {
+      statesMatch = userState === actualState;
+    } else {
+      isNull = true;
+    }
+  }
+  
+  
+  
+  // Obtain the county of the user coordinates & actual coordinates
+  let countiesMatch = false;
+  let userCounty;
+  let actualCounty
+  if (!isNull) {
+    userCounty = await getCounty(userLat, userLong);
+    actualCounty = await getCounty(latitude, longitude);
+    if (userCounty && actualCounty) {
+      countiesMatch = userCounty === actualCounty;
+    }
+    else {
+      isNull = true;
+    }
+  }
+
+
+
+
+
+  // logic
+  if (!isNull && countryMatch) {
+    let navLinks = ["nav-brand","nav-link"]
+  
+
+    if (countiesMatch && statesMatch) {
+      // set bg color of navbar and page to green
+      document.getElementById('nav').style.animation = "none";
+      document.getElementById('nav').style.background = "none";
+      document.getElementById('nav').style.setProperty("background", "green", "important");
+      body.style.setProperty("background-image", "linear-gradient(135deg, #a8e063, #56ab2f, #4caf50, #388e3c, #2e7d32)", "important")
+      document.getElementById('nav').style.setProperty("color", "white", "important");
+      document.querySelectorAll(".navbar .nav-link, .navbar .navbar-brand").forEach(link =>{
+        link.style.color = "white";
+      })
+      gameOverScreen.style.color = "white";
+      body.style.animation = `gradientAnimation ${5}s ease infinite`;
+      body.style.backgroundSize = "400% 400%";
+
+
+    } else if (statesMatch) {
+      // set bg color of navbar and page to yellow
+      document.getElementById('nav').style.animation = "none";
+      document.getElementById('nav').style.background = "none";
+      document.getElementById('nav').style.setProperty("background", "yellow", "important");
+      //body.style.setProperty("background-color", "yellow", "important");
+      body.style.setProperty("background-image", "linear-gradient(135deg, #fff9c4, #ffe082, #ffca28, #ffb300, #ff8f00)", "important")
+      document.querySelectorAll(".navbar .nav-link, .navbar .navbar-brand").forEach(link =>{
+        link.style.setProperty("color","black","important");
+      })
+      gameOverScreen.style.color = "black";
+      body.style.animation = `gradientAnimation ${5}s ease infinite`;
+      body.style.backgroundSize = "400% 400%";
+    }
+    else {
+      console.log("REACHED SAME COUNTRY CASE")
+      // set bg color of navbar and page to orange
+      document.getElementById('nav').style.animation = "none";
+      document.getElementById('nav').style.background = "none";
+      document.getElementById('nav').style.setProperty("background", "orange", "important");
+      //body.style.setProperty("background-color", "orange", "important");
+      body.style.setProperty("background-image", "linear-gradient(135deg, #ffecd2, #ffb27a, #ff8c00, #ff6f00, #e65100)", "important")
+      document.querySelectorAll(".navbar .nav-link, .navbar .navbar-brand").forEach(link =>{
+        link.style.setProperty("color", "black", "important");
+      })
+      gameOverScreen.style.color = "black";
+      body.style.animation = `gradientAnimation ${5}s ease infinite`;
+      body.style.backgroundSize = "400% 400%";
+    }
+
+  } else {
+    if(userdistance<=50){
+      // If difference is 50 miles, set bg color of navbar and page to green
+      document.getElementById('nav').style.animation = "none";
+      document.getElementById('nav').style.background = "none";
+      document.getElementById('nav').style.setProperty("background", "green", "important");
+      //body.style.setProperty("background-color", "green", "important");
+      body.style.setProperty("background-image", "linear-gradient(135deg, #a8e063, #56ab2f, #4caf50, #388e3c, #2e7d32)", "important")
+      body.style.animation = `gradientAnimation ${5}s ease infinite`;
+      document.querySelectorAll(".navbar .nav-link, .navbar .navbar-brand").forEach(link =>{
+        link.style.color = "white";
+      })
+      gameOverScreen.style.color = "white";
+      body.style.backgroundSize = "400% 400%";
+    } else if(userdistance<=600){
+      // set bg color of navbar and page to orange
+      document.getElementById('nav').style.animation = "none";
+      document.getElementById('nav').style.background = "none";
+      document.getElementById('nav').style.setProperty("background", "orange", "important");
+      //body.style.setProperty("background-color", "orange", "important");
+      body.style.setProperty("background-image", "linear-gradient(135deg, #ffecd2, #ffb27a, #ff8c00, #ff6f00, #e65100)", "important")
+      document.querySelectorAll(".navbar .nav-link, .navbar .navbar-brand").forEach(link =>{
+        link.style.color = "black";
+      })
+      gameOverScreen.style.color = "black"
+      body.style.animation = `gradientAnimation ${5}s ease infinite`;
+      body.style.backgroundSize = "400% 400%";
+    } else{
+      //nepal: 237, 152, 107
+      const lowerColor = { r: 237, g: 152, b: 107 };
+      //mongolia: 211, 89, 65
+      const upperColor = { r: 136, g: 27, b: 17 };
+      // range: 600 - 12451
+      let distanceProportion = (userdistance-600)/(10200-600)
+      let red = Math.round(lowerColor.r + (upperColor.r - lowerColor.r) * distanceProportion)
+      let green = Math.round(lowerColor.g + (upperColor.g - lowerColor.g) * (distanceProportion))
+      let blue= Math.round(lowerColor.b + (upperColor.b - lowerColor.b) * (distanceProportion))
+
+      let baseColor = `rgb(${red}, ${green}, ${blue})`;
+
+      // Lighten and darken adjustments for gradient effect
+      let lightenFactor = 20;
+      let darkenFactor = 20;
+      
+      let lightRed = Math.min(255, red + lightenFactor);
+      let lightGreen = Math.min(255, green + lightenFactor);
+      let lightBlue = Math.min(255, blue + lightenFactor);
+      
+      let darkRed = Math.max(0, red - darkenFactor);
+      let darkGreen = Math.max(0, green - darkenFactor);
+      let darkBlue = Math.max(0, blue - darkenFactor);
+      
+      let gradientColor1 = `rgb(${lightRed}, ${lightGreen}, ${lightBlue})`;
+      let gradientColor2 = `rgb(${darkRed}, ${darkGreen}, ${darkBlue})`;
+      
+      // Apply the gradient as background
+      document.body.style.background = `linear-gradient(135deg, ${gradientColor1}, ${baseColor}, ${gradientColor2})`;
+      body.style.animation = `gradientAnimation ${2}s ease infinite`;
+      body.style.backgroundSize = "400% 400%";
+
+      document.getElementById('nav').style.animation = "none";
+      document.getElementById('nav').style.background = "none";
+      document.getElementById('nav').style.setProperty("background", `rgb(${red}, ${green}, ${blue})`, "important");
+      document.querySelectorAll(".navbar .nav-link, .navbar .navbar-brand").forEach(link =>{
+        link.style.color = "white";
+      })
+      gameOverScreen.style.color = "white";
+     //body.style.setProperty("background-color", `rgb(${red}, ${green}, ${blue})`, "important");
+    }
+      
+  }
+    
   if(marker){
     document.getElementById('Distance').innerHTML = `You were ${userdistance} miles off!`;
   }else{
     document.getElementById('Distance').innerHTML = `No pin placed!`;
+    
+    document.body.style.background = "rgb(211,89,65)";
     
   }
   document.getElementById('songName').innerHTML = `Song: '${songName}' by '${artistName}'`;
@@ -566,12 +756,18 @@ function endGame() {
   map.removeLayer(marker);
   console.log("SECOND LATLNG: ", latlng);
   marker = L.marker(latlng).addTo(map);
+
 }
 
 document.getElementById('playAgain').addEventListener('click', async () => {
+  body.style.background = "white";
   map = map.setView([20, 0], 2);
   music.src = null;
   streetViewStatus= false;
+  navElement.style.background = "linear-gradient(135deg, #9d50bb, #6e48aa, #8e2de2, #4a00e0, #ff0080)";
+  navElement.style.backgroundSize = "400% 400%";
+
+
   document.getElementById('bike-wrapper').style.display = "block";
   document.getElementById('loop').style.display = "block";
   
@@ -613,9 +809,63 @@ document.getElementById('playAgain').addEventListener('click', async () => {
   panorama = null;
   //startProcess()
   startProcess();
+  // Reapply the animation
 })
 
+async function getCounty(lat, long) {
+  getCountyURL = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${long}&format=geocodejson&zoom=10&addressdetails=1`
+  try {
+    const response = await fetch(getCountyURL);
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    console.log("COUNTY DATA: ", data);
+    console.log("COUNTY DATA: ", geocodingData);
+    geocodingData = data.features[0].properties.geocoding;
+    if (!geocodingData.hasOwnProperty('county')) {
+      return null;
+    }
+    return geocodingData.county;
+  }
+  catch (error) {
+    console.error('Fetch error:', error);
+  }
+}
 
+async function getCountry(lat, long) {
+  getCountryURL = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${long}&format=geocodejson&zoom=10&addressdetails=1`
+  try {
+    const response = await fetch(getCountryURL);
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    geocodingData = data.features[0].properties.geocoding;
+    if (!geocodingData.hasOwnProperty('country')) {
+      return null;
+    }
 
+    return geocodingData.country;
+  }
+  catch (error) {
+    console.error('Fetch error:', error);
+  }
+}
 
+async function getState(lat,long){
 
+  try{
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${long}&format=geocodejson&zoom=10&addressdetails=1`)
+    if (response.ok){
+      const stateData = await response.json()
+      let data = stateData.features[0].properties.geocoding
+      if(!data.hasOwnProperty('state')){
+        return null
+      }
+      return data.state;
+    }
+  } catch{
+    console.error("Fetch error: ", error);
+  }
+}

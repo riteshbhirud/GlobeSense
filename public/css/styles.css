@@ -4,9 +4,11 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
+ 
   
   
 }
+
 
 .navbar {
   background: linear-gradient(135deg, #9d50bb, #6e48aa, #8e2de2, #4a00e0, #ff0080);
@@ -20,6 +22,7 @@ body {
   animation-iteration-count: infinite;  
   /*animation: gradientAnimation var(--navAnimationTime) ease infinite;*/
   color: white; 
+
   padding: 1.5rem; 
   
 }
@@ -30,9 +33,11 @@ body {
 }
 
 
+
+
 .navbar .navbar-brand,
 .navbar .nav-link {
-  color: white; 
+  color: rgb(255, 255, 255); 
   margin: 0;
   padding: 0;
 }
@@ -166,7 +171,9 @@ body {
 
 #gameOverScreen {
   display: none;
+  color: white;
 }
+
 
 #playAgain{
   position: absolute;
