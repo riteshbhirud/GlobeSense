@@ -152,8 +152,8 @@ function wait(ms) {
 async function getRandomCoordinates() {
   let geometry = null;
 
-  //let city = cities[Math.floor(Math.random() * cities.length)]
-  let city = "Amherst"
+  let city = cities[Math.floor(Math.random() * cities.length)]
+ 
 
 
 
