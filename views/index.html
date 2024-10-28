@@ -21,10 +21,16 @@
   <nav class="navbar" id="nav">
     <div class="container-fluid">
         <a class="navbar-brand" href="#">GlobeSense</a>
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <a class="nav-link" href="/">Home </a>
-            </li>
+        <ul class="navbar-nav d-flex flex-row ms-auto">
+          <li class="nav-item">
+              <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/airport">Airport</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/mall">Mall</a>
+          </li>
         </ul>
     </div>
 </nav>
@@ -32,8 +38,10 @@
 
   
   <p id="timer"></p>
+  <button id="resetLocationButton">
+    <img id="flagImage" src="https://www.svgrepo.com/show/365395/flag-thin.svg" width="20" height="20"/>
+  </button>
   <div id="pano"></div>
-
   <div id="parentMap">
     <div id="map"></div>
     <div id = "submitbtn">
@@ -43,9 +51,9 @@
 
 <div id="gameOverScreen">
   <h1 id="gameOverMessage" style="text-align: center; margin-top: 20px;">Game Over!</h1>
-  <p id="Points" style="text-align: center;"> </p>
-  <h2 id="Distance" style="text-align: center;"></h2>
-  <h3 id ="songName"> </h3>
+  <h3 id="Points" style="text-align: center;"> </h3>
+  <h3 id="Distance" style="text-align: center;"></h3>
+  <p id ="songName" > </p>
   <button id="playAgain">Play Again!</button>
 
   

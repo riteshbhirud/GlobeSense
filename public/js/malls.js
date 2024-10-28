@@ -1,11 +1,13 @@
+//const { get } = require("mongoose");
 
 let latitude;
 let longitude;
 let retryCount = 0;
 const maxRetries = 20;
 
-
+let userPoints = 0;
 let music;
+let score;
 let userLat = 0;
 let userLong = 0;
 const submitBtn = document.getElementById("submit");
@@ -16,19 +18,48 @@ let GameOver = false;
 let marker;
 let ActualLocationMarker;
 var latlng;
-let  streetViewStatus= false;
+let streetViewStatus = false;
 let songName;
 let artistName;
+
 var timer;
 const parentMap = document.getElementById("parentMap");
+const navElement = document.getElementById('nav')
+const body = document.getElementsByTagName('body')[0]
 //const map = document.getElementById("map");
 let map;
 let panorama;
+let sec = 300;
+let timeLimit = 300;
+let maxDistance = 10200;
+
 
 function timer1() {
   console.log("TIMER FUNCTION BEING CALLED")
-  var sec = 300;
+  sec = timeLimit;
+  document.getElementById('nav').style.setProperty("--navAnimationTime", `${15 * sec / 300}s`);
+  navElement.style.animation = "gradientAnimation var(--navAnimationTime) ease infinite";
   timer = setInterval(function () {
+
+    let navAnimationTime = 15 * sec / 300;
+
+    if (navAnimationTime < 2) {
+      navAnimationTime = 2;
+    }
+
+    document.getElementById('nav').style.setProperty("--navAnimationTime", `${navAnimationTime}s`);
+    if (sec <= 10) {
+      //document.getElementById('nav').style.backgroundImage = "linear-gradient(135deg, #9d50bb, #ff0080)"
+      document.getElementById('nav').style.setProperty("--navAnimationTime", `1s`);
+      nav.style.background = "linear-gradient(135deg, #9d50bb, #ff0080)";
+      nav.style.backgroundSize = "400% 400%";
+
+    }/*else{
+      document.getElementById('nav').style.setProperty("--navAnimationTime", `${navAnimationTime}s`);
+      
+    }*/
+
+
     let minutes = Math.floor(sec / 60)
     let seconds = sec - minutes * 60
     if (seconds < 10) {
@@ -46,121 +77,120 @@ function timer1() {
 
 let encodedCountry;
 let url;
-
 cities = [
-    {
-      "latitude": 25.1985,
-      "longitude": 55.2795 // The Dubai Mall, UAE
-    },
-    {
-      "latitude": 1.3004,
-      "longitude": 103.8454 // VivoCity, Singapore
-    },
-    {
-      "latitude": 35.6946,
-      "longitude": 139.7026 // Shibuya PARCO, Tokyo, Japan
-    },
-    {
-      "latitude": 13.7466,
-      "longitude": 100.5346 // Siam Paragon, Bangkok, Thailand
-    },
-    {
-      "latitude": 33.5020,
-      "longitude": -111.9261 // Scottsdale Fashion Square, Scottsdale, USA
-    },
-    {
-      "latitude": 40.7580,
-      "longitude": -73.9855 // Westfield World Trade Center, New York City, USA
-    },
-    {
-      "latitude": 22.3053,
-      "longitude": 114.1725 // Harbour City, Hong Kong
-    },
-    {
-      "latitude": -33.8668,
-      "longitude": 151.2093 // Westfield Sydney, Australia
-    },
-    {
-      "latitude": 19.4337,
-      "longitude": -99.1386 // Centro Santa Fe, Mexico City, Mexico
-    },
-    {
-      "latitude": 37.7846,
-      "longitude": -122.4069 // Westfield San Francisco Centre, San Francisco, USA
-    },
-    {
-      "latitude": 41.0435,
-      "longitude": 28.9896 // Istanbul Cevahir Mall, Istanbul, Turkey
-    },
-    {
-      "latitude": 51.5145,
-      "longitude": -0.1170 // Westfield London, London, UK
-    },
-    {
-      "latitude": -23.5666,
-      "longitude": -46.6485 // Shopping Cidade São Paulo, São Paulo, Brazil
-    },
-    {
-      "latitude": 3.1579,
-      "longitude": 101.7123 // Suria KLCC, Kuala Lumpur, Malaysia
-    },
-    {
-      "latitude": -26.1341,
-      "longitude": 28.0535 // Sandton City, Johannesburg, South Africa
-    },
-    {
-      "latitude": 45.4642,
-      "longitude": 9.1900 // Galleria Vittorio Emanuele II, Milan, Italy
-    },
-    {
-      "latitude": 35.6586,
-      "longitude": 139.7433 // Roppongi Hills, Tokyo, Japan
-    },
-    {
-      "latitude": 21.0285,
-      "longitude": 105.8542 // Vincom Mega Mall Royal City, Hanoi, Vietnam
-    },
-    {
-      "latitude": -6.2245,
-      "longitude": 106.8451 // Grand Indonesia, Jakarta, Indonesia
-    },
-    {
-      "latitude": 25.0401,
-      "longitude": 121.5645 // Taipei 101 Mall, Taipei, Taiwan
-    },
-    {
-      "latitude": -8.6965,
-      "longitude": 115.1675 // Discovery Shopping Mall, Bali, Indonesia
-    },
-    {
-      "latitude": 39.9123,
-      "longitude": 116.4108 // China World Mall, Beijing, China
-    },
-    {
-      "latitude": 43.6677,
-      "longitude": -79.3948 // Toronto Eaton Centre, Toronto, Canada
-    },
-    {
-      "latitude": 34.0522,
-      "longitude": -118.2437 // The Grove, Los Angeles, USA
-    },
-    {
-      "latitude": 48.8566,
-      "longitude": 2.3522 // Galeries Lafayette, Paris, France
-    },
-    {
-      "latitude": 32.7157,
-      "longitude": -117.1611 // Fashion Valley, San Diego, USA
-    },
-    {
-      "latitude": 38.7072,
-      "longitude": -9.1355 // Centro Colombo, Lisbon, Portugal
-    }
-  ]
+  {
+    "latitude": 25.1985,
+    "longitude": 55.2795 // The Dubai Mall, UAE
+  },
+  {
+    "latitude": 1.3004,
+    "longitude": 103.8454 // VivoCity, Singapore
+  },
+  {
+    "latitude": 35.6946,
+    "longitude": 139.7026 // Shibuya PARCO, Tokyo, Japan
+  },
+  {
+    "latitude": 13.7466,
+    "longitude": 100.5346 // Siam Paragon, Bangkok, Thailand
+  },
+  {
+    "latitude": 33.5020,
+    "longitude": -111.9261 // Scottsdale Fashion Square, Scottsdale, USA
+  },
+  {
+    "latitude": 40.7580,
+    "longitude": -73.9855 // Westfield World Trade Center, New York City, USA
+  },
+  {
+    "latitude": 22.3053,
+    "longitude": 114.1725 // Harbour City, Hong Kong
+  },
+  {
+    "latitude": -33.8668,
+    "longitude": 151.2093 // Westfield Sydney, Australia
+  },
+  {
+    "latitude": 19.4337,
+    "longitude": -99.1386 // Centro Santa Fe, Mexico City, Mexico
+  },
+  {
+    "latitude": 37.7846,
+    "longitude": -122.4069 // Westfield San Francisco Centre, San Francisco, USA
+  },
+  {
+    "latitude": 41.0435,
+    "longitude": 28.9896 // Istanbul Cevahir Mall, Istanbul, Turkey
+  },
+  {
+    "latitude": 51.5145,
+    "longitude": -0.1170 // Westfield London, London, UK
+  },
+  {
+    "latitude": -23.5666,
+    "longitude": -46.6485 // Shopping Cidade São Paulo, São Paulo, Brazil
+  },
+  {
+    "latitude": 3.1579,
+    "longitude": 101.7123 // Suria KLCC, Kuala Lumpur, Malaysia
+  },
+  {
+    "latitude": -26.1341,
+    "longitude": 28.0535 // Sandton City, Johannesburg, South Africa
+  },
+  {
+    "latitude": 45.4642,
+    "longitude": 9.1900 // Galleria Vittorio Emanuele II, Milan, Italy
+  },
+  {
+    "latitude": 35.6586,
+    "longitude": 139.7433 // Roppongi Hills, Tokyo, Japan
+  },
+  {
+    "latitude": 21.0285,
+    "longitude": 105.8542 // Vincom Mega Mall Royal City, Hanoi, Vietnam
+  },
+  {
+    "latitude": -6.2245,
+    "longitude": 106.8451 // Grand Indonesia, Jakarta, Indonesia
+  },
+  {
+    "latitude": 25.0401,
+    "longitude": 121.5645 // Taipei 101 Mall, Taipei, Taiwan
+  },
+  {
+    "latitude": -8.6965,
+    "longitude": 115.1675 // Discovery Shopping Mall, Bali, Indonesia
+  },
+  {
+    "latitude": 39.9123,
+    "longitude": 116.4108 // China World Mall, Beijing, China
+  },
+  {
+    "latitude": 43.6677,
+    "longitude": -79.3948 // Toronto Eaton Centre, Toronto, Canada
+  },
+  {
+    "latitude": 34.0522,
+    "longitude": -118.2437 // The Grove, Los Angeles, USA
+  },
+  {
+    "latitude": 48.8566,
+    "longitude": 2.3522 // Galeries Lafayette, Paris, France
+  },
+  {
+    "latitude": 32.7157,
+    "longitude": -117.1611 // Fashion Valley, San Diego, USA
+  },
+  {
+    "latitude": 38.7072,
+    "longitude": -9.1355 // Centro Colombo, Lisbon, Portugal
+  }
+]
 
 
 //const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
-
+//https://nominatim.openstreetmap.org/reverse?lat=40.730610&lon=-73.935242&format=json&zoom=10&addressdetails=1
 
 //import {OPENCAGE_API_KEY, GEOCODE_API_KEY, GOOGLE_API_KEY, JAMENDO_CLIENT_ID} from "./config.js";
 
@@ -193,28 +223,19 @@ function wait(ms) {
 
 
 async function setCoordinates() {
+  
+  let place = cities[Math.floor(Math.random() * cities.length)]
+  let country = await getCountry(place.latitude,place.longitude)
   console.log("CALLING FETCH COUNTRY FUNCTION")
   if (retryCount >= maxRetries) {
     console.error('Max retry limit reached. Stopping further attempts.');
     return null;
   }
-
-  let city = cities[Math.floor(Math.random() * cities.length)]
-  latitude = city.latitude;
-  longitude = city.longitude;
-
-
-
-
   retryCount++;
-  /*const coordinates = {
-    latitude:city.latitude,
-    longitude:72.875406
-  }*/
-  //const coordinates = await getRandomCoordinates();
-  //console.log("setCoordinates coordinates", coordinates);
-  //latitude = coordinates.latitude;
-  //longitude = coordinates.longitude;
+  const coordinates = place;
+  console.log("setCoordinates coordinates", coordinates);
+  latitude = coordinates.latitude;
+  longitude = coordinates.longitude;
 
   try {
     const streetViewApiUrl = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${latitude},${longitude}&key=${googleAPIKey}&radius=100`;
@@ -225,22 +246,19 @@ async function setCoordinates() {
     }
 
     const streetViewData = await streetViewResponse.json();
-    if (streetViewData.status === "OK") {
-      streetViewStatus = true;
-      console.log("GOOGLE STREET VIEW SUCCESSFUL:", latitude, longitude, "are able to be displayed by google street view.")
-      document.getElementById("timer").style.display = "block";
-      initialize(parseFloat(latitude), parseFloat(longitude));
-      timer1();
-      return encodedCountry;
-    } else if (streetViewData.status === "ZERO_RESULTS") {
-      console.warn('No Street View coverage at this location. Fetching new location...');
-      return setCoordinates();
-    }
+
+    streetViewStatus = true;
+      
+    document.getElementById("timer").style.display = "block";
+    initialize(parseFloat(latitude), parseFloat(longitude));
+    timer1();
+    return encodeURIComponent(country);
+   
   } catch (error) {
     console.error('Fetch error:', error);
     await wait(2000); // Retry after 2 seconds
     return setCoordinates();
-  }
+  } 
 
   return null; // Fallback in case of an unexpected failure
 }
@@ -249,9 +267,8 @@ async function setCoordinates() {
 async function startProcess() {
   console.log("CALLING START PROCESS FUNCTION")
   const country = await setCoordinates();
-  console.log(country)
-  //if (country) {
-    encodedCountry = encodeURIComponent(country);
+  if (country) {
+    //encodedCountry = encodeURIComponent(country);
     console.log("Country:", country);
 
     //const musicApiUrl = `https://de1.api.radio-browser.info/json/stations/search?country=${encodedCountry}&tag=jazz&limit=1`;
@@ -266,7 +283,6 @@ async function startProcess() {
       const data = await response.json();
 
       if (data.results.length === 0) {
-        console.log("JAMENDO NOT FOUND, BACKUP RADIO IN USE")
         startProcessRadio()
       }
       else {
@@ -294,7 +310,6 @@ async function startProcess() {
       music = document.createElement("audio");
       music.id = "background-audio"
       music.src = url;
-      music.currentTime = 50;//starts at 50 secs
       music.innerHTML = "Your browser does not support the audio element.";
       //music.type = "audio/mpeg";
       music.autoplay = true;
@@ -312,7 +327,7 @@ async function startProcess() {
     } catch (error) {
       console.error('Music Fetch error:', error);
     }
-  //}
+  }
 }
 
 // Start the process by fetching the country and then the music
@@ -377,7 +392,7 @@ getLoading();
 
 // Wait for the document to fully load before initializing the Leaflet map
 document.addEventListener("DOMContentLoaded", function () {
-  
+
   // Initialize Leaflet map 
   console.log("reachedreachedreached")
   map = L.map('map').setView([20, 0], 2); // World view with center at [20, 0] and zoom level 2
@@ -471,23 +486,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
-function getLoading(){
+function getLoading() {
   console.log("GETLOADING CALLED!")
   const checkStreetViewStatus = setInterval(() => {
     if (streetViewStatus) {
-        document.getElementById("loop").style.display = 'none';
-        document.getElementById("bike-wrapper").style.display = 'none';
-        document.getElementById("map").style.display= 'block';
-        setTimeout(function() {
-          map.invalidateSize(); 
-      }, 100); 
+      document.getElementById("loop").style.display = 'none';
+      document.getElementById("bike-wrapper").style.display = 'none';
+      document.getElementById("map").style.display = 'block';
+      setTimeout(function () {
+        map.invalidateSize();
+      }, 100);
 
-        document.getElementById("pano").style.display = 'block';
+      document.getElementById("pano").style.display = 'block';
 
-        clearInterval(checkStreetViewStatus);
+      clearInterval(checkStreetViewStatus);
     }
-  }, 100); 
-  
+  }, 100);
+
 }
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -515,17 +530,251 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 
 
 
-function endGame() {
+async function endGame() {
+
   //alert(`You Picked Lat: ${userLat}, Long: ${userLong}`);
   GameOver = true;
   document.getElementById('timer').style.display = "none";
   let userdistance = haversineDistance(latitude, longitude, userLat, userLong);
-  if(marker){
-    document.getElementById('Distance').innerHTML = `You were ${userdistance} miles off!`;
-  }else{
-    document.getElementById('Distance').innerHTML = `No pin placed!`;
-    
+  /*Total pts = points * time
+
+points = Max Points *( 1 - Distance/Max Distance)
+
+FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time Taken)/Time Limit)*/
+
+
+  //userPoints = Math.floor(5000 * (.7* -Math.exp(.2*(userdistance/maxDistance))+ .3*-Math.exp(.07*(sec)/timeLimit)))
+
+
+  let timeBonus;
+  if ((timeLimit - sec) <= 20) {
+    timeBonus = 5000 * 0.02
   }
+
+  else if ((timeLimit - sec) <= 60) {
+    timeBonus = 5000 * 0.02 * 0.7
+  }
+
+  else if ((timeLimit - sec) <= 120) {
+    timeBonus = 5000 * 0.02 * 0.35
+  }
+
+  else {
+    timeBonus = 0
+  }
+
+  console.log(`DISTANCE SCORE: ${(5000 * (-1 / (1 + Math.exp(-15 * (userdistance / maxDistance - .5))) + 1) * 0.98 + timeBonus)}`)
+  console.log(timeBonus)
+
+  if (userdistance >= 7500) {
+    userPoints = timeBonus
+  } else {
+    userPoints = Math.floor(5000 * (-1 / (1 + Math.exp(-15 * (userdistance / maxDistance - .5))) + 1) * 0.98 + timeBonus)
+  }
+
+
+  //userPoints = Math.floor(5000 * (1.1 + ( -.1 * Math.exp( 2.39 * ( userdistance/maxDistance)  ) ) ) * 0.98 + timeBonus)
+  // Distance component: y= ( -1 / ( 1 + Math.exp( -10.3 * (x-0.5) ) ) ) + 1
+
+
+  if (userPoints >= 4980) {
+    userPoints = 5000;
+  }
+
+  //alert(userPoints);
+
+
+  /*proportionRed = userdistance/12451
+  proportionGreen = 1 - proportionRed
+  red = 255*proportionRed
+  green = 255*proportionGreen
+  blue = 0
+  document.getElementById('nav').style.animation = "none";
+  document.getElementById('nav').style.background = "none";
+  document.getElementById('nav').style.setProperty("background", `rgb(${red}, ${green}, ${blue})`, "important");
+  console.log("COLOR: ", document.getElementById('nav').style.background)*/
+
+  let userGeocodingData = await getGeocodingData(userLat, userLong);
+  let actualGeocodingData = await getGeocodingData(latitude, longitude);
+
+
+  let isNull = false;
+  let countryMatch = false;
+  //Obtain the country of the user choice & actual
+  //Actual country is encodedCountry
+  let userCountry = userGeocodingData.hasOwnProperty("country") ? userGeocodingData.country : null;
+  if (userCountry && encodedCountry) {
+    countryMatch = userCountry === decodeURIComponent(encodedCountry);
+  } else {
+    isNull = true;
+  }
+
+  //Obtain the state of user choice & actual
+  let statesMatch = false;
+  let userState;
+  let actualState;
+  if (!isNull) {
+    userState = userGeocodingData.hasOwnProperty("state") ? userGeocodingData.state : null;
+    actualState = actualGeocodingData.hasOwnProperty("state") ? actualGeocodingData.state : null;
+    if (userState && actualState) {
+      statesMatch = userState === actualState;
+    } else {
+      isNull = true;
+    }
+  }
+
+
+
+  // Obtain the county of the user coordinates & actual coordinates
+  let countiesMatch = false;
+  let userCounty;
+  let actualCounty
+  if (!isNull) {
+    userCounty = userGeocodingData.hasOwnProperty("county") ? userGeocodingData.county : null;
+    actualCounty = actualGeocodingData.hasOwnProperty("county") ? actualGeocodingData.county : null;
+    if (userCounty && actualCounty) {
+      countiesMatch = userCounty === actualCounty;
+    }
+    else {
+      isNull = true;
+    }
+  }
+
+
+
+
+
+  // logic
+  if (!isNull && countryMatch) {
+    let navLinks = ["nav-brand", "nav-link"]
+
+
+    if (countiesMatch && statesMatch) {
+      // set bg color of navbar and page to green
+      document.getElementById('nav').style.animation = "none";
+      document.getElementById('nav').style.background = "none";
+      document.getElementById('nav').style.setProperty("background", "green", "important");
+      body.style.setProperty("background-image", "linear-gradient(135deg, #a8e063, #56ab2f, #4caf50, #388e3c, #2e7d32)", "important")
+      document.getElementById('nav').style.setProperty("color", "white", "important");
+      document.querySelectorAll(".navbar .nav-link, .navbar .navbar-brand").forEach(link => {
+        link.style.color = "white";
+      })
+      gameOverScreen.style.color = "white";
+      body.style.animation = `gradientAnimation ${5}s ease infinite`;
+      body.style.backgroundSize = "400% 400%";
+
+
+    } else if (statesMatch) {
+      // set bg color of navbar and page to yellow
+      document.getElementById('nav').style.animation = "none";
+      document.getElementById('nav').style.background = "none";
+      document.getElementById('nav').style.setProperty("background", "yellow", "important");
+      //body.style.setProperty("background-color", "yellow", "important");
+      body.style.setProperty("background-image", "linear-gradient(135deg, #fff9c4, #ffe082, #ffca28, #ffb300, #ff8f00)", "important")
+      document.querySelectorAll(".navbar .nav-link, .navbar .navbar-brand").forEach(link => {
+        link.style.setProperty("color", "black", "important");
+      })
+      gameOverScreen.style.color = "black";
+      body.style.animation = `gradientAnimation ${5}s ease infinite`;
+      body.style.backgroundSize = "400% 400%";
+    }
+    else {
+      console.log("REACHED SAME COUNTRY CASE")
+      // set bg color of navbar and page to orange
+      document.getElementById('nav').style.animation = "none";
+      document.getElementById('nav').style.background = "none";
+      document.getElementById('nav').style.setProperty("background", "orange", "important");
+      //body.style.setProperty("background-color", "orange", "important");
+      body.style.setProperty("background-image", "linear-gradient(135deg, #ffecd2, #ffb27a, #ff8c00, #ff6f00, #e65100)", "important")
+      document.querySelectorAll(".navbar .nav-link, .navbar .navbar-brand").forEach(link => {
+        link.style.setProperty("color", "black", "important");
+      })
+      gameOverScreen.style.color = "black";
+      body.style.animation = `gradientAnimation ${5}s ease infinite`;
+      body.style.backgroundSize = "400% 400%";
+    }
+
+  } else {
+    if (userdistance <= 50) {
+      // If difference is 50 miles, set bg color of navbar and page to green
+      document.getElementById('nav').style.animation = "none";
+      document.getElementById('nav').style.background = "none";
+      document.getElementById('nav').style.setProperty("background", "green", "important");
+      //body.style.setProperty("background-color", "green", "important");
+      body.style.setProperty("background-image", "linear-gradient(135deg, #a8e063, #56ab2f, #4caf50, #388e3c, #2e7d32)", "important")
+      body.style.animation = `gradientAnimation ${5}s ease infinite`;
+      document.querySelectorAll(".navbar .nav-link, .navbar .navbar-brand").forEach(link => {
+        link.style.color = "white";
+      })
+      gameOverScreen.style.color = "white";
+      body.style.backgroundSize = "400% 400%";
+    } else if (userdistance <= 600) {
+      // set bg color of navbar and page to orange
+      document.getElementById('nav').style.animation = "none";
+      document.getElementById('nav').style.background = "none";
+      document.getElementById('nav').style.setProperty("background", "orange", "important");
+      //body.style.setProperty("background-color", "orange", "important");
+      body.style.setProperty("background-image", "linear-gradient(135deg, #ffecd2, #ffb27a, #ff8c00, #ff6f00, #e65100)", "important")
+      document.querySelectorAll(".navbar .nav-link, .navbar .navbar-brand").forEach(link => {
+        link.style.color = "black";
+      })
+      gameOverScreen.style.color = "black"
+      body.style.animation = `gradientAnimation ${5}s ease infinite`;
+      body.style.backgroundSize = "400% 400%";
+    } else {
+      //nepal: 237, 152, 107
+      const lowerColor = { r: 237, g: 152, b: 107 };
+      //mongolia: 211, 89, 65
+      const upperColor = { r: 136, g: 27, b: 17 };
+      // range: 600 - 12451
+      let distanceProportion = (userdistance - 600) / (maxDistance - 600)
+      let red = Math.round(lowerColor.r + (upperColor.r - lowerColor.r) * distanceProportion)
+      let green = Math.round(lowerColor.g + (upperColor.g - lowerColor.g) * (distanceProportion))
+      let blue = Math.round(lowerColor.b + (upperColor.b - lowerColor.b) * (distanceProportion))
+
+      let baseColor = `rgb(${red}, ${green}, ${blue})`;
+
+      // Lighten and darken adjustments for gradient effect
+      let lightenFactor = 20;
+      let darkenFactor = 20;
+
+      let lightRed = Math.min(255, red + lightenFactor);
+      let lightGreen = Math.min(255, green + lightenFactor);
+      let lightBlue = Math.min(255, blue + lightenFactor);
+
+      let darkRed = Math.max(0, red - darkenFactor);
+      let darkGreen = Math.max(0, green - darkenFactor);
+      let darkBlue = Math.max(0, blue - darkenFactor);
+
+      let gradientColor1 = `rgb(${lightRed}, ${lightGreen}, ${lightBlue})`;
+      let gradientColor2 = `rgb(${darkRed}, ${darkGreen}, ${darkBlue})`;
+
+      // Apply the gradient as background
+      document.body.style.background = `linear-gradient(135deg, ${gradientColor1}, ${baseColor}, ${gradientColor2})`;
+      body.style.animation = `gradientAnimation ${2}s ease infinite`;
+      body.style.backgroundSize = "400% 400%";
+
+      document.getElementById('nav').style.animation = "none";
+      document.getElementById('nav').style.background = "none";
+      document.getElementById('nav').style.setProperty("background", `rgb(${red}, ${green}, ${blue})`, "important");
+      document.querySelectorAll(".navbar .nav-link, .navbar .navbar-brand").forEach(link => {
+        link.style.color = "white";
+      })
+      gameOverScreen.style.color = "white";
+      //body.style.setProperty("background-color", `rgb(${red}, ${green}, ${blue})`, "important");
+    }
+
+  }
+
+  if (marker) {
+    document.getElementById('Distance').innerHTML = `You were ${userdistance} miles off!`;
+  } else {
+    document.getElementById('Distance').innerHTML = `No pin placed!`;
+    userPoints = 0;
+    document.body.style.background = "rgb(211,89,65)";
+
+  }
+  document.getElementById('Points').innerHTML = `You scored ${userPoints} points`;
   document.getElementById('songName').innerHTML = `Song: '${songName}' by '${artistName}'`;
   console.log(document.getElementById('songName').innerHTML);
   //alert(`You were ${userdistance} miles off`);
@@ -561,22 +810,28 @@ function endGame() {
   map.removeLayer(marker);
   console.log("SECOND LATLNG: ", latlng);
   marker = L.marker(latlng).addTo(map);
+
 }
 
 document.getElementById('playAgain').addEventListener('click', async () => {
+  body.style.background = "white";
   map = map.setView([20, 0], 2);
   music.src = null;
-  streetViewStatus= false;
+  streetViewStatus = false;
+  navElement.style.background = "linear-gradient(135deg, #9d50bb, #6e48aa, #8e2de2, #4a00e0, #ff0080)";
+  navElement.style.backgroundSize = "400% 400%";
+
+
   document.getElementById('bike-wrapper').style.display = "block";
   document.getElementById('loop').style.display = "block";
-  
+
   getLoading();
 
   // Clear map
 
   map.removeLayer(ActualLocationMarker);
   ActualLocationMarker = null;
-  if(marker){
+  if (marker) {
     map.removeLayer(marker);
   }
 
@@ -608,9 +863,53 @@ document.getElementById('playAgain').addEventListener('click', async () => {
   panorama = null;
   //startProcess()
   startProcess();
+  // Reapply the animation
 })
+async function getGeocodingData(lat, long) {
+  getCountyURL = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${long}&format=geocodejson&zoom=10&addressdetails=1`
+  try {
+    const response = await fetch(getCountyURL);
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    geocodingData = data.features[0].properties.geocoding;
+    return geocodingData
+  }
+  catch (error) {
+    console.error('Fetch error:', error);
+  }
+
+}
+
+async function getCounty(lat, long) {
+  let geocodingData = await getGeocodingData(lat, long);
+  if (!geocodingData.hasOwnProperty('county')) {
+    return null;
+  }
+  return geocodingData.county;
+
+}
+
+async function getCountry(lat, long) {
+  let geocodingData = await getGeocodingData(lat, long);
+  if (!geocodingData.hasOwnProperty('country')) {
+    return null;
+  }
+  return geocodingData.country;
+}
+
+async function getState(lat, long) {
+  let geocodingData = await getGeocodingData(lat, long);
+  if (!geocodingData.hasOwnProperty('state')) {
+    return null;
+  }
+  return geocodingData.state;
 
 
 
+}
 
-
+document.getElementById("resetLocationButton").addEventListener("click", () => {
+  initialize(latitude, longitude);
+})

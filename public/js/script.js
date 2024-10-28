@@ -1,10 +1,9 @@
-
 let latitude;
 let longitude;
 let retryCount = 0;
 const maxRetries = 20;
 
-
+let userPoints =0;
 let music;
 let score;
 let userLat = 0;
@@ -20,6 +19,7 @@ var latlng;
 let  streetViewStatus= false;
 let songName;
 let artistName;
+
 var timer;
 const parentMap = document.getElementById("parentMap");
 const navElement = document.getElementById('nav')
@@ -27,10 +27,14 @@ const body = document.getElementsByTagName('body')[0]
 //const map = document.getElementById("map");
 let map;
 let panorama;
+let sec = 300;
+let timeLimit = 300;
+let maxDistance = 10200; 
+
 
 function timer1() {
   console.log("TIMER FUNCTION BEING CALLED")
-  var sec = 300;
+  sec = timeLimit;
   document.getElementById('nav').style.setProperty("--navAnimationTime", `${15 * sec/300}s`);
   navElement.style.animation = "gradientAnimation var(--navAnimationTime) ease infinite";
   timer = setInterval(function () {
@@ -153,6 +157,7 @@ async function getRandomCoordinates() {
   let geometry = null;
 
   let city = cities[Math.floor(Math.random() * cities.length)]
+  city = "Amherst";
  
 
 
@@ -534,6 +539,53 @@ async function endGame() {
   GameOver = true;
   document.getElementById('timer').style.display = "none";
   let userdistance = haversineDistance(latitude, longitude, userLat, userLong);
+  /*Total pts = points * time
+
+points = Max Points *( 1 - Distance/Max Distance)
+
+FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time Taken)/Time Limit)*/ 
+
+
+  //userPoints = Math.floor(5000 * (.7* -Math.exp(.2*(userdistance/maxDistance))+ .3*-Math.exp(.07*(sec)/timeLimit)))
+
+
+  let timeBonus;
+  if( (timeLimit - sec) <= 20 ) {
+    timeBonus = 5000 * 0.02
+  }
+
+  else if ( (timeLimit - sec) <= 60 ) {
+    timeBonus = 5000 * 0.02 * 0.7
+  }
+
+  else if ( (timeLimit - sec) <= 120 ) {
+    timeBonus = 5000 * 0.02 * 0.35
+  }
+
+  else {
+    timeBonus = 0
+  }
+
+  console.log(`DISTANCE SCORE: ${(5000* (-1/(1+ Math.exp(-15 * (userdistance/maxDistance -.5)))+1)*0.98 + timeBonus)}`)
+  console.log(timeBonus)
+  
+  if(userdistance>=7500){
+    userPoints = timeBonus
+  }else{
+    userPoints = Math.floor(5000* (-1/(1+ Math.exp(-15 * (userdistance/maxDistance -.5)))+1)*0.98 + timeBonus) 
+  }
+
+
+  //userPoints = Math.floor(5000 * (1.1 + ( -.1 * Math.exp( 2.39 * ( userdistance/maxDistance)  ) ) ) * 0.98 + timeBonus)
+  // Distance component: y= ( -1 / ( 1 + Math.exp( -10.3 * (x-0.5) ) ) ) + 1
+  
+  
+  if(userPoints>=4980){
+    userPoints= 5000;
+  }
+
+  //alert(userPoints);
+
 
   /*proportionRed = userdistance/12451
   proportionGreen = 1 - proportionRed
@@ -545,11 +597,15 @@ async function endGame() {
   document.getElementById('nav').style.setProperty("background", `rgb(${red}, ${green}, ${blue})`, "important");
   console.log("COLOR: ", document.getElementById('nav').style.background)*/
   
+  let userGeocodingData = await getGeocodingData(userLat, userLong);
+  let actualGeocodingData = await getGeocodingData(latitude, longitude);
+
+
   let isNull = false;
   let countryMatch = false;
   //Obtain the country of the user choice & actual
   //Actual country is encodedCountry
-  let userCountry = await getCountry(userLat,userLong)
+  let userCountry = userGeocodingData.hasOwnProperty("country") ? userGeocodingData.country : null;
   if(userCountry && encodedCountry){
     countryMatch = userCountry === decodeURIComponent(encodedCountry);
   } else{
@@ -561,8 +617,8 @@ async function endGame() {
   let userState;
   let actualState;
   if(!isNull) {
-    userState = await getState(userLat, userLong);
-    actualState = await getState(latitude, longitude);
+    userState = userGeocodingData.hasOwnProperty("state") ? userGeocodingData.state : null;
+    actualState = actualGeocodingData.hasOwnProperty("state") ? actualGeocodingData.state : null;
     if (userState && actualState) {
       statesMatch = userState === actualState;
     } else {
@@ -577,8 +633,8 @@ async function endGame() {
   let userCounty;
   let actualCounty
   if (!isNull) {
-    userCounty = await getCounty(userLat, userLong);
-    actualCounty = await getCounty(latitude, longitude);
+    userCounty = userGeocodingData.hasOwnProperty("county") ? userGeocodingData.county : null;
+    actualCounty = actualGeocodingData.hasOwnProperty("county") ? actualGeocodingData.county : null;
     if (userCounty && actualCounty) {
       countiesMatch = userCounty === actualCounty;
     }
@@ -674,7 +730,7 @@ async function endGame() {
       //mongolia: 211, 89, 65
       const upperColor = { r: 136, g: 27, b: 17 };
       // range: 600 - 12451
-      let distanceProportion = (userdistance-600)/(10200-600)
+      let distanceProportion = (userdistance-600)/(maxDistance-600)
       let red = Math.round(lowerColor.r + (upperColor.r - lowerColor.r) * distanceProportion)
       let green = Math.round(lowerColor.g + (upperColor.g - lowerColor.g) * (distanceProportion))
       let blue= Math.round(lowerColor.b + (upperColor.b - lowerColor.b) * (distanceProportion))
@@ -717,10 +773,11 @@ async function endGame() {
     document.getElementById('Distance').innerHTML = `You were ${userdistance} miles off!`;
   }else{
     document.getElementById('Distance').innerHTML = `No pin placed!`;
-    
+    userPoints = 0;
     document.body.style.background = "rgb(211,89,65)";
     
   }
+  document.getElementById('Points').innerHTML = `You scored ${userPoints} points`;
   document.getElementById('songName').innerHTML = `Song: '${songName}' by '${artistName}'`;
   console.log(document.getElementById('songName').innerHTML);
   //alert(`You were ${userdistance} miles off`);
@@ -811,8 +868,7 @@ document.getElementById('playAgain').addEventListener('click', async () => {
   startProcess();
   // Reapply the animation
 })
-
-async function getCounty(lat, long) {
+async function getGeocodingData(lat,long){
   getCountyURL = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${long}&format=geocodejson&zoom=10&addressdetails=1`
   try {
     const response = await fetch(getCountyURL);
@@ -820,52 +876,43 @@ async function getCounty(lat, long) {
       throw new Error('Network response was not ok');
     }
     const data = await response.json();
-    console.log("COUNTY DATA: ", data);
-    console.log("COUNTY DATA: ", geocodingData);
     geocodingData = data.features[0].properties.geocoding;
-    if (!geocodingData.hasOwnProperty('county')) {
-      return null;
-    }
-    return geocodingData.county;
+    return geocodingData
   }
   catch (error) {
     console.error('Fetch error:', error);
   }
+  
+}
+
+async function getCounty(lat, long) {
+  let geocodingData = await getGeocodingData(lat,long);
+  if (!geocodingData.hasOwnProperty('county')) {
+    return null;
+  }
+  return geocodingData.county;
+
 }
 
 async function getCountry(lat, long) {
-  getCountryURL = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${long}&format=geocodejson&zoom=10&addressdetails=1`
-  try {
-    const response = await fetch(getCountryURL);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    const data = await response.json();
-    geocodingData = data.features[0].properties.geocoding;
-    if (!geocodingData.hasOwnProperty('country')) {
-      return null;
-    }
-
-    return geocodingData.country;
+  let geocodingData = await getGeocodingData(lat,long);
+  if (!geocodingData.hasOwnProperty('country')) {
+    return null;
   }
-  catch (error) {
-    console.error('Fetch error:', error);
-  }
+  return geocodingData.country;
 }
 
 async function getState(lat,long){
-
-  try{
-    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${long}&format=geocodejson&zoom=10&addressdetails=1`)
-    if (response.ok){
-      const stateData = await response.json()
-      let data = stateData.features[0].properties.geocoding
-      if(!data.hasOwnProperty('state')){
-        return null
-      }
-      return data.state;
-    }
-  } catch{
-    console.error("Fetch error: ", error);
+  let geocodingData = await getGeocodingData(lat,long);
+  if (!geocodingData.hasOwnProperty('state')) {
+    return null;
   }
+  return geocodingData.state;
+
+  
+ 
 }
+
+document.getElementById("resetLocationButton").addEventListener("click", ()=>{
+  initialize(latitude,longitude);
+})
