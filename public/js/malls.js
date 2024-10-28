@@ -535,7 +535,7 @@ async function endGame() {
   //alert(`You Picked Lat: ${userLat}, Long: ${userLong}`);
   GameOver = true;
   document.getElementById('timer').style.display = "none";
-  let userdistance = haversineDistance(latitude, longitude, userLat, userLong);
+  let userdistance = Math.round(haversineDistance(latitude, longitude, userLat, userLong)) 
   /*Total pts = points * time
 
 points = Max Points *( 1 - Distance/Max Distance)
@@ -563,13 +563,13 @@ FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time 
     timeBonus = 0
   }
 
-  console.log(`DISTANCE SCORE: ${(5000 * (-1 / (1 + Math.exp(-15 * (userdistance / maxDistance - .5))) + 1) * 0.98 + timeBonus)}`)
+  console.log(`TOTAL SCORE: ${userPoints = Math.floor(5000* (-1.1/(1+ Math.exp(-10.8 * (userdistance/maxDistance -.2)))+1.11)*0.98 + timeBonus)}`)
   console.log(timeBonus)
 
   if (userdistance >= 7500) {
     userPoints = timeBonus
   } else {
-    userPoints = Math.floor(5000 * (-1 / (1 + Math.exp(-15 * (userdistance / maxDistance - .5))) + 1) * 0.98 + timeBonus)
+    userPoints = Math.floor(5000* (-1.1/(1+ Math.exp(-10.8 * (userdistance/maxDistance -.2)))+1.11)*0.98 + timeBonus)
   }
 
 
