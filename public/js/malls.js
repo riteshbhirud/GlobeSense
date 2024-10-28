@@ -4,7 +4,7 @@ let latitude;
 let longitude;
 let retryCount = 0;
 const maxRetries = 20;
-
+let polyline;
 let userPoints = 0;
 let music;
 let score;
@@ -810,10 +810,20 @@ FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time 
   map.removeLayer(marker);
   console.log("SECOND LATLNG: ", latlng);
   marker = L.marker(latlng).addTo(map);
+  var latlngs = [
+    [userLat,userLong],  
+    [latitude,longitude]  
+  ];
+  polyline = L.polyline(latlngs, {color: 'yellow', dashArray: '5,10', weight: 5, opacity: 1.0 }).addTo(map);
+
+  map.fitBounds(polyline.getBounds());
 
 }
 
 document.getElementById('playAgain').addEventListener('click', async () => {
+  if(polyline){
+    polyline.remove();
+  }
   body.style.background = "white";
   map = map.setView([20, 0], 2);
   music.src = null;
