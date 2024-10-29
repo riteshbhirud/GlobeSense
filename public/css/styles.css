@@ -182,7 +182,7 @@ body {
 
 #playAgain{
   position: absolute;
-  top: 80%;
+  top: 84%;
   left: 43%;
 
 
@@ -193,11 +193,6 @@ body {
   border: none;
   width: 200px;
   height: 40px;
-}
-
-
-#songName{
-  text-align: center; 
 }
 
 #timer{
@@ -237,4 +232,54 @@ body {
 
 #flagImage{
     filter: invert(1);
+}
+
+#ProgressBar{
+  width: 30%;
+  background-color: #d3d3d3;
+  position: absolute;
+  top: 26%;
+  left: 50%;
+  border-radius: 8px;
+}
+
+#ScoreBar{
+  width:0%;
+  height: 30px;
+  background-image: linear-gradient(90deg, #9d50bb, #6e48aa, #8e2de2, #4a00e0, #ff0080);
+  /*transition: width 20s;*/
+  text-align: center;
+  color: white;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+  animation-name: gradientAnimation;
+  background-size: 400% 400%;
+  animation-duration: 10s;
+  animation-timing-function: ease;
+  animation-iteration-count: infinite;  
+}
+
+#Points {
+  top: 26%;
+  left: 20%;
+  position: absolute;
+  width: 30%;
+}
+
+#Distance {
+  position: absolute;
+  bottom: 20%;
+  left: 20%;
+  width: 30%;
+  font-size: 17px;
+  font-weight: bold;
+}
+
+#songName{
+  position: absolute;
+  bottom: 19.2%;
+  left: 50%;
+  width: 30%;
+  text-align: right;
+  font-weight: bold;
 }

@@ -32,6 +32,7 @@ let panorama;
 let sec = 300;
 let timeLimit = 300;
 let maxDistance = 10200;
+let endGameNavColor;
 
 
 function timer1() {
@@ -396,16 +397,17 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize Leaflet map 
   console.log("reachedreachedreached")
   map = L.map('map').setView([20, 0], 2); // World view with center at [20, 0] and zoom level 2
-  L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoicmJoaXJ1ZCIsImEiOiJjbTF1NzZ3NDMwYTBtMmpxMzFsc25zcWI3In0.D0zCMdlhuyKVDAWG3zydKA', {
+  /*L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoicmJoaXJ1ZCIsImEiOiJjbTF1NzZ3NDMwYTBtMmpxMzFsc25zcWI3In0.D0zCMdlhuyKVDAWG3zydKA', {
     attribution: '© Mapbox © OpenStreetMap',
     tileSize: 512,
     zoomOffset: -1,
     maxZoom: 18
-  }).addTo(map);
+  }).addTo(map);*/
 
-  /*L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
      attribution: '© OpenStreetMap contributors'
-   }).addTo(map);*/
+   }).addTo(map);
+  document.getElementById('resetLocationButton').display = "block";
   document.getElementById('parentMap').addEventListener('mouseenter', function () {
     if (!GameOver) {
       document.getElementById('map').style.width = '600px';
@@ -535,6 +537,7 @@ async function endGame() {
   //alert(`You Picked Lat: ${userLat}, Long: ${userLong}`);
   GameOver = true;
   document.getElementById('timer').style.display = "none";
+  document.getElementById('resetLocationButton') = "none";
   let userdistance = Math.round(haversineDistance(latitude, longitude, userLat, userLong)) 
   /*Total pts = points * time
 
@@ -600,44 +603,53 @@ FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time 
 
   let isNull = false;
   let countryMatch = false;
-  //Obtain the country of the user choice & actual
-  //Actual country is encodedCountry
-  let userCountry = userGeocodingData.hasOwnProperty("country") ? userGeocodingData.country : null;
-  if (userCountry && encodedCountry) {
-    countryMatch = userCountry === decodeURIComponent(encodedCountry);
-  } else {
-    isNull = true;
-  }
-
-  //Obtain the state of user choice & actual
   let statesMatch = false;
   let userState;
   let actualState;
-  if (!isNull) {
-    userState = userGeocodingData.hasOwnProperty("state") ? userGeocodingData.state : null;
-    actualState = actualGeocodingData.hasOwnProperty("state") ? actualGeocodingData.state : null;
-    if (userState && actualState) {
-      statesMatch = userState === actualState;
-    } else {
-      isNull = true;
-    }
-  }
-
-
-
-  // Obtain the county of the user coordinates & actual coordinates
   let countiesMatch = false;
   let userCounty;
+  let userCountry
   let actualCounty
-  if (!isNull) {
-    userCounty = userGeocodingData.hasOwnProperty("county") ? userGeocodingData.county : null;
-    actualCounty = actualGeocodingData.hasOwnProperty("county") ? actualGeocodingData.county : null;
-    if (userCounty && actualCounty) {
-      countiesMatch = userCounty === actualCounty;
-    }
-    else {
+  //Obtain the country of the user choice & actual
+  //Actual country is encodedCountry
+  if (userGeocodingData && !userGeocodingData.hasOwnProperty("error")){
+    userCountry = userGeocodingData.hasOwnProperty("country") ? userGeocodingData.country : null;
+    if(userCountry && encodedCountry){
+      countryMatch = userCountry === decodeURIComponent(encodedCountry);
+    } else{
       isNull = true;
     }
+
+
+  //Obtain the state of user choice & actual
+  
+  
+    if(!isNull) {
+      userState = userGeocodingData.hasOwnProperty("state") ? userGeocodingData.state : null;
+      actualState = actualGeocodingData.hasOwnProperty("state") ? actualGeocodingData.state : null;
+      if (userState && actualState) {
+        statesMatch = userState === actualState;
+      } else {
+        isNull = true;
+      } 
+    }
+    
+    
+    
+    // Obtain the county of the user coordinates & actual coordinates
+    
+    
+    if (!isNull) {
+      userCounty = userGeocodingData.hasOwnProperty("county") ? userGeocodingData.county : null;
+      actualCounty = actualGeocodingData.hasOwnProperty("county") ? actualGeocodingData.county : null;
+      if (userCounty && actualCounty) {
+        countiesMatch = userCounty === actualCounty;
+      }
+      else {
+        isNull = true;
+      }
+    }
+
   }
 
 
@@ -651,6 +663,7 @@ FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time 
 
     if (countiesMatch && statesMatch) {
       // set bg color of navbar and page to green
+      endGameNavColor = "green"
       document.getElementById('nav').style.animation = "none";
       document.getElementById('nav').style.background = "none";
       document.getElementById('nav').style.setProperty("background", "green", "important");
@@ -666,6 +679,7 @@ FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time 
 
     } else if (statesMatch) {
       // set bg color of navbar and page to yellow
+      endGameNavColor = "yellow"
       document.getElementById('nav').style.animation = "none";
       document.getElementById('nav').style.background = "none";
       document.getElementById('nav').style.setProperty("background", "yellow", "important");
@@ -681,6 +695,7 @@ FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time 
     else {
       console.log("REACHED SAME COUNTRY CASE")
       // set bg color of navbar and page to orange
+      endGameNavColor = "orange"
       document.getElementById('nav').style.animation = "none";
       document.getElementById('nav').style.background = "none";
       document.getElementById('nav').style.setProperty("background", "orange", "important");
@@ -697,6 +712,7 @@ FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time 
   } else {
     if (userdistance <= 50) {
       // If difference is 50 miles, set bg color of navbar and page to green
+      endGameNavColor = "green"
       document.getElementById('nav').style.animation = "none";
       document.getElementById('nav').style.background = "none";
       document.getElementById('nav').style.setProperty("background", "green", "important");
@@ -710,6 +726,7 @@ FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time 
       body.style.backgroundSize = "400% 400%";
     } else if (userdistance <= 600) {
       // set bg color of navbar and page to orange
+      endGameNavColor = "orange"
       document.getElementById('nav').style.animation = "none";
       document.getElementById('nav').style.background = "none";
       document.getElementById('nav').style.setProperty("background", "orange", "important");
@@ -733,6 +750,7 @@ FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time 
       let blue = Math.round(lowerColor.b + (upperColor.b - lowerColor.b) * (distanceProportion))
 
       let baseColor = `rgb(${red}, ${green}, ${blue})`;
+      endGameNavColor = baseColor
 
       // Lighten and darken adjustments for gradient effect
       let lightenFactor = 20;
@@ -774,7 +792,7 @@ FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time 
     document.body.style.background = "rgb(211,89,65)";
 
   }
-  document.getElementById('Points').innerHTML = `You scored ${userPoints} points`;
+  document.getElementById('Points').innerHTML = `Score: ${userPoints} points`;
   document.getElementById('songName').innerHTML = `Song: '${songName}' by '${artistName}'`;
   console.log(document.getElementById('songName').innerHTML);
   //alert(`You were ${userdistance} miles off`);
@@ -814,13 +832,20 @@ FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time 
     [userLat,userLong],  
     [latitude,longitude]  
   ];
-  polyline = L.polyline(latlngs, {color: 'yellow', dashArray: '5,10', weight: 5, opacity: 1.0 }).addTo(map);
+  polyline = L.polyline(latlngs, {color: endGameNavColor, dashArray: '5,10', weight: 5, opacity: 1.0 }).addTo(map);
 
   map.fitBounds(polyline.getBounds());
+
+  document.getElementById("ScoreBar").style.display = "block";
+  document.getElementById("ScoreBar").style.width = `${(userPoints/5000)*100}%`;
+  document.getElementById("ScoreBar").innerHTML = userPoints;
 
 }
 
 document.getElementById('playAgain').addEventListener('click', async () => {
+  document.getElementById("ScoreBar").style.display = "none";
+  document.getElementById("ScoreBar").style.width = "0%;"
+  document.getElementById("ScoreBar").innerHTML = "";
   if(polyline){
     polyline.remove();
   }
