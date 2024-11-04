@@ -1,20 +1,35 @@
 
-const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const path = require('path');
-const mongoose = require("mongoose");
+//npm install --save-dev @types/express
+import dotenv from 'dotenv';
+dotenv.config();
+//const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
+//const express = require('express');
+import express from 'express'
+// const { MongoClient, ServerApiVersion } = require('mongodb');
+import { MongoClient, ServerApiVersion } from 'mongodb';
+// const path = require('path');
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// const mongoose = require("mongoose");
+import mongoose from "mongoose";
+
+
 
 const app = express();
 app.use(express.json())
-const userRoutes = require('./routes/user'); 
+//const userRoutes = require('./routes/user');
+import userRoutes from './routes/user.js'; 
 
-app.use('/api/users', require('./routes/user'));
+app.use('/api/users', userRoutes);
 //Cookie setup
 
 
 
-const port = process.env.PORT || 5550;
-const uri = "mongodb+srv://globesense0:eLmy07cxM7kqH8Bp@cluster0.dvqwx.mongodb.net/Users?retryWrites=true&w=majority&appName=Cluster0";
+const port = process.env.PORT;
+const uri = process.env.MONGODB_URI;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -27,7 +42,9 @@ const client = new MongoClient(uri, {
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
-app.get('/', (req, res) => {
+app.get
+
+('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'home.html'));
 });
 
@@ -67,7 +84,8 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    databasesList = await client.db().admin().listDatabases();
+    //let databasesList;
+    let databasesList = await client.db().admin().listDatabases();
     console.log("Databases:");
     databasesList.databases.forEach(db => console.log(` - ${db.name}`));
     // Send a ping to confirm a successful connection

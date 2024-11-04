@@ -1,13 +1,25 @@
-const express = require('express');
-const mongoose = require('mongoose');
+//require('dotenv').config({path: '../.env}'})
+import dotenv from 'dotenv';
+const result = dotenv.config();
+if (result.error) {
+    console.error("Error loading .env file:", result.error);
+} else {
+    console.log("Environment variables loaded successfully.");
+}
+import express from 'express'
+// const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-const User = require('../models/user'); 
-const cookieParser = require('cookie-parser');
+import bcrypt from 'bcryptjs';
+import User from '../models/user.js'; 
+// const cookieParser = require('cookie-parser');
+import cookieParser from 'cookie-parser';
 const app = express();
 app.use(cookieParser());
 
-mongoose.connect("mongodb+srv://globesense0:eLmy07cxM7kqH8Bp@cluster0.dvqwx.mongodb.net/Users?retryWrites=true&w=majority&appName=Cluster0");
+console.log(process.env.MONGODB_URI);
+mongoose.connect(process.env.MONGODB_URI);
+
 
 router.post('/register', async (req, res) => {
     console.log(User)
@@ -77,4 +89,4 @@ router.post('/login', async (req, res) => {
 })
 
 
-module.exports = router;
+export default router;

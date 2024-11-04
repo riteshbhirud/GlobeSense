@@ -195,15 +195,8 @@ cities = [
 
 //import {OPENCAGE_API_KEY, GEOCODE_API_KEY, GOOGLE_API_KEY, JAMENDO_CLIENT_ID} from "./config.js";
 
-const OPENCAGE_API_KEY = "7a884e24cd134e77a00bf0317cef614e";
-const GEOCODE_API_KEY = "66f86f9209ead753863632rmq2d6726";
-const GOOGLE_API_KEY = "AIzaSyAOB3wAcUOx_wjfd5KCApjhj-TYxJEd924";
-const JAMENDO_CLIENT_ID = "3d25d527";
-
-const openCageAPIKey = OPENCAGE_API_KEY;
-const geocodeAPIKey = GEOCODE_API_KEY;
-const googleAPIKey = GOOGLE_API_KEY;
-const jamendoClientID = JAMENDO_CLIENT_ID;
+const googleAPIKey = process.env.GOOGLE_API_KEY;
+const jamendoClientID = process.env.JAMENDO_CLIENT_ID;
 
 
 //const googleMapsAPIScriptObj = document.getElementById("google-maps-js-api");

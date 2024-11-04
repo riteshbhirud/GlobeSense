@@ -1,5 +1,4 @@
 
-
 document.getElementById("signin").addEventListener("submit", async(event)=>{
     event.preventDefault();
     const username = document.getElementById("username").value

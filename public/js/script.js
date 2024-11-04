@@ -1,3 +1,60 @@
+//require('dotenv').config()
+console.log("Starting script...");
+//import { Loader } from '@googlemaps/js-api-loader';
+import Dotenv from 'dotenv-webpack';
+module.exports = {
+  plugins: [
+    new Dotenv()
+  ]
+};
+
+
+
+
+console.log("imported dotenv")
+
+console.log("imported dotenv")
+if (result.error) {
+    console.error("Error loading .env file:", result.error);
+} else {
+    console.log("Environment variables loaded successfully.");
+}
+
+const Loader = await import('@googlemaps/js-api-loader');
+console.log("imported loader")
+
+const loader = new Loader({
+  apiKey: process.env.GOOGLE_API_KEY,
+  version: "weekly",
+});
+
+console.log("About to define initialize function");
+function initialize(lat, lng) {
+  const fenway = { lat: lat, lng: lng };
+
+  const panorama = new google.maps.StreetViewPanorama(
+    document.getElementById("pano"),
+    {
+      position: fenway,
+      pov: {
+        heading: 34,
+        pitch: 10,
+      },
+      disableDefaultUI: true,  // Disable default UI controls
+      linksControl: false,     // Disable navigation arrows
+      panControl: false,       // Disable panning control
+      addressControl: false,   // Disable street address display
+      showRoadLabels: false,   // Hide street name indications
+    }
+  );
+}
+
+// Load the Google Maps API and initialize the panorama
+loader.load().then(() => {
+  // Call initialize with the desired latitude and longitude
+  initialize(lat, lng); 
+});
+
 let latitude;
 let longitude;
 let retryCount = 0;
@@ -130,15 +187,10 @@ cities = ["New%20York", "New%20Delhi", "Los%20Angeles", "Chicago", "Toronto", "M
 
 //import {OPENCAGE_API_KEY, GEOCODE_API_KEY, GOOGLE_API_KEY, JAMENDO_CLIENT_ID} from "./config.js";
 
-const OPENCAGE_API_KEY = "7a884e24cd134e77a00bf0317cef614e";
-const GEOCODE_API_KEY = "66f86f9209ead753863632rmq2d6726";
-const GOOGLE_API_KEY = "AIzaSyAOB3wAcUOx_wjfd5KCApjhj-TYxJEd924";
-const JAMENDO_CLIENT_ID = "3d25d527";
-
-const openCageAPIKey = OPENCAGE_API_KEY;
-const geocodeAPIKey = GEOCODE_API_KEY;
-const googleAPIKey = GOOGLE_API_KEY;
-const jamendoClientID = JAMENDO_CLIENT_ID;
+const openCageAPIKey = process.env.OPENCAGE_API_KEY;
+console.log("OPen cage: ", openCageAPIKey)
+const googleAPIKey = process.env.GOOGLE_API_KEY;
+const jamendoClientID = process.env.JAMENDO_CLIENT_ID;
 
 
 //const googleMapsAPIScriptObj = document.getElementById("google-maps-js-api");
@@ -338,7 +390,7 @@ async function startProcess() {
 
 // Start the process by fetching the country and then the music
 
-function initialize(lat, lng) {
+/*window.initialize = function initialize (lat, lng) {
   const fenway = { lat: lat, lng: lng };
 
   panorama = new google.maps.StreetViewPanorama(
@@ -367,7 +419,7 @@ function initialize(lat, lng) {
 chosenCountry = encodeURIComponent(chosenCountry);
 console.log("LASTcountry:", chosenCountry);*/
 
-window.initialize = initialize;
+//window.initialize = initialize;
 
 async function startProcessRadio() {
   console.log("BACKUP RADIO BEING USED")
