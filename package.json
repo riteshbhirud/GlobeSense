@@ -4,7 +4,7 @@
   "description": "Guess the place using the panoramic view and music from that place!",
   "main": "script.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "nodemon --env-file=.env app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,5 +17,9 @@
     "express": "^4.21.1",
     "mongodb": "^6.10.0",
     "mongoose": "^8.7.2"
+  },
+  "devDependencies": {
+    "dotenv-webpack": "^8.1.0",
+    "eslint-webpack-plugin": "^4.2.0"
   }
 }

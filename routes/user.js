@@ -7,7 +7,7 @@ const cookieParser = require('cookie-parser');
 const app = express();
 app.use(cookieParser());
 
-mongoose.connect("mongodb+srv://globesense0:eLmy07cxM7kqH8Bp@cluster0.dvqwx.mongodb.net/Users?retryWrites=true&w=majority&appName=Cluster0");
+mongoose.connect(process.env.MONGODB_URI);
 
 router.post('/register', async (req, res) => {
     console.log(User)

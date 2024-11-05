@@ -32,6 +32,11 @@ let sec = 300;
 let timeLimit = 300;
 let maxDistance = 10200; 
 let endGameNavColor;
+let openCageAPIKey
+let geocodeAPIKey
+let googleAPIKey
+let jamendoClientID
+
 
 
 
@@ -78,7 +83,7 @@ function timer1() {
 
 let encodedCountry;
 let url;
-cities = ["New%20York", "New%20Delhi", "Los%20Angeles", "Chicago", "Toronto", "Mexico%20City", "Houston", "Vancouver",
+let cities = ["New%20York", "New%20Delhi", "Los%20Angeles", "Chicago", "Toronto", "Mexico%20City", "Houston", "Vancouver",
   "San%20Francisco", "Montreal", "Miami", "São%20Paulo", "Buenos%20Aires", "Rio%20de%20Janeiro",
   "Santiago", "Bogotá", "Lima", "Caracas", "Medellín", "Montevideo", "Quito", "London",
   "Paris", "Berlin", "Madrid", "Rome", "Amsterdam", "Vienna", "Zurich", "Warsaw",
@@ -130,15 +135,31 @@ cities = ["New%20York", "New%20Delhi", "Los%20Angeles", "Chicago", "Toronto", "M
 
 //import {OPENCAGE_API_KEY, GEOCODE_API_KEY, GOOGLE_API_KEY, JAMENDO_CLIENT_ID} from "./config.js";
 
-const OPENCAGE_API_KEY = "7a884e24cd134e77a00bf0317cef614e";
-const GEOCODE_API_KEY = "66f86f9209ead753863632rmq2d6726";
-const GOOGLE_API_KEY = "AIzaSyAOB3wAcUOx_wjfd5KCApjhj-TYxJEd924";
-const JAMENDO_CLIENT_ID = "3d25d527";
 
-const openCageAPIKey = OPENCAGE_API_KEY;
-const geocodeAPIKey = GEOCODE_API_KEY;
-const googleAPIKey = GOOGLE_API_KEY;
-const jamendoClientID = JAMENDO_CLIENT_ID;
+async function loadConfig(){
+
+  try {
+    const envVariablesResponse = await fetch("/config");
+    
+    if (!envVariablesResponse.ok) {
+      throw new Error('Unable to get API keys');
+    }
+    let environmentVariables = await envVariablesResponse.json()
+    return environmentVariables;
+    
+  } catch (error) {
+    console.error('Fetch error:', error);
+  }
+
+}
+loadConfig().then((environmentVariables)=>{
+  console.log("Outside after loading:", environmentVariables)
+  openCageAPIKey = environmentVariables.OPENCAGE_API_KEY;
+  geocodeAPIKey = environmentVariables.GEOCODE_API_KEY;
+  googleAPIKey = environmentVariables.GOOGLE_API_KEY;
+  jamendoClientID = environmentVariables.JAMENDO_CLIENT_ID;
+});
+
 
 
 //const googleMapsAPIScriptObj = document.getElementById("google-maps-js-api");

@@ -13,8 +13,9 @@ app.use('/api/users', require('./routes/user'));
 
 
 
-const port = process.env.PORT || 5550;
-const uri = "mongodb+srv://globesense0:eLmy07cxM7kqH8Bp@cluster0.dvqwx.mongodb.net/Users?retryWrites=true&w=majority&appName=Cluster0";
+const port = 5550;
+const uri = process.env.MONGODB_URI;
+console.log("MOGODB URI: ", uri);
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -23,6 +24,18 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
+app.get('/config', (req, res) =>{
+  res.json({
+    OPENCAGE_API_KEY: process.env.OPENCAGE_API_KEY,
+    GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
+    JAMENDO_CLIENT_ID: process.env.JAMENDO_CLIENT_ID,
+    MONGODB_URI: process.env.MONGODB_URI
+
+  });
+
+});
+
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -63,31 +76,12 @@ app.listen(port, () => {
 
 
 async function run() {
-
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    databasesList = await client.db().admin().listDatabases();
-    console.log("Databases:");
-    databasesList.databases.forEach(db => console.log(` - ${db.name}`));
     // Send a ping to confirm a successful connection
-    await client.db("Users").command({ ping: 1 });
+    await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
-
-    const testUser = {
-      username: 'testuser',
-      email: 'testuser@example.com',
-      password: 'password123',
-      points: 0
-    };
-
-    const collection = client.db("Users").collection("Users");
-    //console.log(collection)
-    //const insertResult = await collection.insertOne(testUser);
-    //console.log("Inserted user:", insertResult.insertedId);
-    
-  } catch (err) {
-    console.error('Error during insert:', err);
   } finally {
     // Ensures that the client will close when you finish/error
     await client.close();
