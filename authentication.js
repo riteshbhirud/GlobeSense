@@ -8,7 +8,7 @@ function generateAccessToken(user) {
     };
     
     const secret = process.env.JWT_SECRET_KEY;
-    const options = { expiresIn: 15 };
+    const options = { expiresIn: 20 };
   
     return jwt.sign(payload, secret, options);
 }
@@ -30,7 +30,7 @@ const payload = {
     //email: user.email
 };
 
-const secret = process.env.JWT_SECRET_KEY;
+const secret = process.env.REFRESH_SECRET_KEY;
 const options = { expiresIn: 60 };
 
 return jwt.sign(payload, secret, options);
@@ -39,7 +39,7 @@ return jwt.sign(payload, secret, options);
 
 
 function verifyRefreshToken(token) {
-    const secret = process.env.JWT_SECRET_KEY;
+    const secret = process.env.REFRESH_SECRET_KEY;
   
     try {
       const decoded = jwt.verify(token, secret);
