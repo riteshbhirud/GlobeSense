@@ -13,13 +13,17 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "ejs": "^3.1.10",
     "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.10.0",
     "mongoose": "^8.7.2",
+    "node-fetch": "^3.3.2",
     "nodemon": "^3.1.7"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.7",
     "dotenv-webpack": "^8.1.0",
     "eslint-webpack-plugin": "^4.2.0"
   }

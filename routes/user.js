@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../models/user'); 
+const {generateAccessToken, verifyAccessToken, generateRefreshToken, verifyRefreshToken} = require('../authentication.js')
 const cookieParser = require('cookie-parser');
 const app = express();
 app.use(cookieParser());
@@ -55,16 +56,28 @@ router.post('/login', async (req, res) => {
       res.status(401).json({ msg: 'Username does not exist.' });
     }
     else if (await bcrypt.compare(req.body.password, user.password)){
-      const sessionToken = `${username}2`
-      res.cookie('session',sessionToken,{
-        httpOnly: true,
-        secure: true,
-        maxAge: 7200000  //2hrs
+      //login logic
+      const token = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
 
+      // Set the token as an HTTP-only cookie
+      res.cookie("jwt", token, {
+        httpOnly: true, // Prevents JavaScript access to cookies
+        secure: true,   // Use secure cookies (only HTTPS) in production
+        sameSite: "lax", // Helps prevent CSRF attacks
+        maxAge: 20000    // Cookie expiration set to 2 mins
       });
 
-    
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true, // Prevents JavaScript access to cookies
+        secure: true,   // Use secure cookies (only HTTPS) in production
+        sameSite: "lax", // Helps prevent CSRF attacks
+        maxAge: 60000    // Cookie expiration set to 5 mins
+      });
+      
 
+    
+ 
       res.status(201).json({ msg: 'User signed in successfully.' });
     }
     else {
@@ -75,6 +88,37 @@ router.post('/login', async (req, res) => {
     res.status(500).send('Server error');
   }
 })
+
+router.post('/token/refresh', (req, res) => {
+  console.log("Request Headers:", req.headers.cookie);
+  console.log("REQ",req)
+  console.log("INSIDE POST ROUTE")
+  console.log("COOKIES INSIDE POST ROUTE:", req.cookies);
+    //const refreshToken = req.cookies.hasOwnProperty("refreshToken") ? req.cookies.refreshToken : null;
+  const refreshToken = ("refreshToken" in req.cookies) ? req.cookies.refreshToken : null;
+
+
+
+  if (!refreshToken) {
+    return res.sendStatus(401);
+  }
+
+  const result = verifyRefreshToken(refreshToken);
+
+  if (!result.success) {
+    return res.status(403).json({ error: result.error });
+  }
+
+  const user = result.data;
+  const newAccessToken = generateAccessToken(user);
+  res.cookie("jwt", newAccessToken, {
+    httpOnly: true, // Prevents JavaScript access to cookies
+    secure: true,   // Use secure cookies (only HTTPS) in production
+    sameSite: "lax", // Helps prevent CSRF attacks
+    maxAge: 20000    // Cookie expiration set to 2 mins
+  });
+  res.status(201).json({ msg: 'Access token successfully refreshed.' });
+});
 
 
 module.exports = router;
