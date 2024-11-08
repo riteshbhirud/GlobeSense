@@ -6,16 +6,18 @@ const path = require('path');
 const mongoose = require("mongoose");
 const {generateAccessToken, verifyAccessToken, verifyRefreshToken} = require('./authentication.js')
 const cookieParser = require('cookie-parser');
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
 //require("dotenv").config();
 
 
+
 const app = express();
+app.set('view engine', 'ejs');
 app.use(express.json())
 app.use(cookieParser());
-const userRoutes = require('./routes/user'); 
+const userRoutes = require('./routes/user').router; 
 
-app.use('/api/users', require('./routes/user'));
+app.use('/api/users', require('./routes/user').router);
 //Cookie setup
 
 /*const cors = require('cors');
@@ -61,6 +63,9 @@ app.get('/config', (req, res) =>{
 });
 
 app.get('/', (req, res) => {
+    console.log("CURRENT USER:", require('./routes/user').getUser());
+
+    res.render("home", {user: require('./routes/user').getUser()})
     res.sendFile(path.join(__dirname, 'views', 'home.html'));
 });
 
@@ -88,6 +93,7 @@ app.get('/register', (req, res) => {
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'signIn.html'));
 });
+
 
 
 app.listen(port, () => {
@@ -119,6 +125,7 @@ async function authenticateToken(req, res, next) {
     return res.sendStatus(401);
   }
 
+  
   // Get the access token stored in cookie storage
   let token = req.cookies.hasOwnProperty("jwt") ? req.cookies.jwt : null;
   console.log("OLD TOKEN:", token)

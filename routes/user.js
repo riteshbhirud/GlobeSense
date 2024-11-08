@@ -8,6 +8,7 @@ const {generateAccessToken, verifyAccessToken, generateRefreshToken, verifyRefre
 //const app = express();
 //app.use(cookieParser());
 //require('dotenv').config({path: "../.env"});
+let userObj = null;
 mongoose.connect(process.env.MONGODB_URI);
 
 router.post('/register', async (req, res) => {
@@ -76,15 +77,18 @@ router.post('/login', async (req, res) => {
         maxAge: 60000    // Cookie expiration set to 1 min
       });
       
+      
 
-    
- 
-      res.status(201).json({ msg: 'User signed in successfully.' });
+
+      userObj = { username: user.username, email: user.email }
+      res.status(201).json(userObj);
 
       // If they came from another page, probably need to redirect them to that page again.
       // Otherwise, redirect them to the home page by default.
 
     }
+
+
     else {
         res.status(401).json({ msg: 'Incorrect Password.' });
     }
@@ -132,4 +136,45 @@ router.post('/login', async (req, res) => {
 });*/
 
 
-module.exports = router;
+router.post('/logout', async (req, res) => {
+  try {
+    res.clearCookie("jwt", {
+      httpOnly: true, // Prevents JavaScript access to cookies
+    
+      sameSite: "strict", // Helps prevent CSRF attacks
+        // Cookie expiration set to 20 seconds
+    });
+    res.clearCookie("refreshToken", {
+      httpOnly: true,  // Prevents JavaScript access to cookies
+      sameSite: "strict", // Helps prevent CSRF attacks
+    });
+    userObj = null;
+    res.redirect("/")
+    
+    console.log("logged out!")
+  } catch (error) {
+    res.status(500).send('Logout error', error);
+    
+  }
+  
+
+
+
+
+});
+
+
+function getUser () {
+  console.log("GETUSER:", userObj);
+  return userObj;
+}
+
+function setUser(newUser) {
+  userObj = newUser;
+}
+
+module.exports = {
+  getUser,
+  setUser,
+  router,
+};

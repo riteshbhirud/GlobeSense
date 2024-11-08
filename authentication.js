@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken');
 
 function generateAccessToken(user) {
     const payload = {
-      username: user.username//,
-      //email: user.email
+      username: user.username,
+      email: user.email
     };
     
     const secret = process.env.JWT_SECRET_KEY;

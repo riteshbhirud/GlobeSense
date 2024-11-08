@@ -15,10 +15,23 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/register">Create an Account</a>
                     </li>
+                    <% if (user) {%>
+                        <li class="nav-item">
+                            <form action="/api/users/logout" method="POST" style="display: inline;">
+                                <button type="submit" class="nav-link" style="background: none; border: none; padding: 0; cursor: pointer; color: inherit; text-decoration: none;">
+                                    Log Out
+                                </button>
+                            </form>
+                        </li>
+                    <% }%>
                 </ul>
             </div>
         </nav>        
         <h1 id="title">GlobeSense!</h1>
+        <% if (user) {%>
+            <h1>Welcome: <%= user.username %> </h1>
+        <% }%>
+
         <div id="buttonsContainer">
             <a href="/game"><button class="playButton" id="playClassic">Classic <img class="playIcon" id="globeIcon" src="https://cdn-icons-png.flaticon.com/512/6213/6213305.png"/></button></a>
             <a href="/airport"><button class="playButton" id="playAirport">Airport <img class="playIcon"id="airplaneIcon" src="https://icons.veryicon.com/png/o/miscellaneous/simple-one-line-icon/aircraft-66.png"/></button></a>
