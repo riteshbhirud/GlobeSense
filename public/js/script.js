@@ -570,6 +570,8 @@ async function endGame() {
   document.getElementById('resetLocationButton').style.display = "none";
   let userdistance = Math.round(haversineDistance(latitude, longitude, userLat, userLong)) 
 
+
+
   /*Total pts = points * time
 
 points = Max Points *( 1 - Distance/Max Distance)
@@ -684,7 +686,8 @@ FINAL SCORE = Max Points *( 1 - Distance/Max Distance) * (1+ (Time Limit - Time 
 
   }
 
-
+  //
+  endRound(userPoints)
 
   // logic
   if (!isNull && countryMatch) {
@@ -984,5 +987,44 @@ async function getState(lat,long){
 document.getElementById("resetLocationButton").addEventListener("click", ()=>{
   initialize(latitude,longitude);
 })
+
+async function getCsrfToken() {
+  const response = await fetch('/api/get-csrf-token', {
+    method: 'GET',
+    credentials: 'include', // Ensure session cookies are sent with the request
+  });
+  const data = await response.json();
+  return data.csrfToken;
+}
+
+async function endRound(score) {
+  
+  try {
+    const csrfToken = await getCsrfToken();
+    const response = await fetch('/api/users/endRound', {
+      method: 'POST',
+     
+      headers: {
+        'Content-Type': 'application/json',
+        'CSRF-Token': csrfToken
+      },
+      credentials: 'include',
+      body: JSON.stringify({ score })
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      console.log(data.message); 
+      alert(data.message)
+    } else {
+      console.error("Failed to save round data:", data.error);
+    }
+  } catch (error) {
+    console.error("Error during endRound request:", error);
+  }
+}
+
+
+
 
 

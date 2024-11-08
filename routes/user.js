@@ -12,6 +12,7 @@ let userObj = null;
 mongoose.connect(process.env.MONGODB_URI);
 
 router.post('/register', async (req, res) => {
+    console.log('CSRF token received from register post request:', req.body._csrf)
     console.log(User)
     console.log("Form submitted");
     const { username, email, password } = req.body;
@@ -40,9 +41,35 @@ router.post('/register', async (req, res) => {
       // Save user
       
       await user.save();
-      res.status(201).json({ msg: 'User registered successfully' });
-      console.log(res.json())
-      console.log("reached line 40")
+      
+      // Log in user
+      const token = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
+
+      // Set the token as an HTTP-only cookie
+      res.cookie("jwt", token, {
+        httpOnly: true, // Prevents JavaScript access to cookies
+        secure: true,   // Use secure cookies (only HTTPS) in production
+        sameSite: "strict", // Helps prevent CSRF attacks
+        maxAge: 20000    // Cookie expiration set to 20 seconds
+      });
+
+      // Ideally the refresh token should be stored in long-term storage such as a database
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,  // Prevents JavaScript access to cookies
+        secure: true,   // Use secure cookies (only HTTPS) in production
+        sameSite: "strict", // Helps prevent CSRF attacks
+        maxAge: 60000    // Cookie expiration set to 1 min
+      });
+      
+      
+
+
+      userObj = { username: user.username, email: user.email }
+
+      res.redirect("/")
+      //console.log(res.json())
+      //console.log("reached line 40")
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server error');
@@ -50,11 +77,14 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
+  console.log('CSRF token received from post request:', req.body._csrf)
   const {username, password} = req.body;
   try {
     let user = await User.findOne({ username })
     if (!user) {
-      res.status(401).json({ msg: 'Username does not exist.' });
+      req.flash('error', 'Invalid username or password');
+      //res.status(401).json({ msg: 'Username does not exist.' });
+      return res.redirect("/login")
     }
     else if (await bcrypt.compare(req.body.password, user.password)){
       //login logic
@@ -72,8 +102,8 @@ router.post('/login', async (req, res) => {
       // Ideally the refresh token should be stored in long-term storage such as a database
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,  // Prevents JavaScript access to cookies
-        secure: false,   // Use secure cookies (only HTTPS) in production
-        sameSite: "lax", // Helps prevent CSRF attacks
+        secure: true,   // Use secure cookies (only HTTPS) in production
+        sameSite: "strict", // Helps prevent CSRF attacks
         maxAge: 60000    // Cookie expiration set to 1 min
       });
       
@@ -81,7 +111,8 @@ router.post('/login', async (req, res) => {
 
 
       userObj = { username: user.username, email: user.email }
-      res.status(201).json(userObj);
+      //res.status(201).json(userObj);
+      return res.redirect("/")
 
       // If they came from another page, probably need to redirect them to that page again.
       // Otherwise, redirect them to the home page by default.
@@ -90,11 +121,15 @@ router.post('/login', async (req, res) => {
 
 
     else {
-        res.status(401).json({ msg: 'Incorrect Password.' });
+        req.flash('error', 'Invalid username or password');
+        //res.status(401).json({ msg: 'Incorrect Password.' });
+        return res.redirect("/login")
     }
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    req.flash('error', 'Invalid username or password');
+    //res.status(500).send('Server error');
+    return res.redirect("/login")
   }
 })
 
@@ -137,6 +172,7 @@ router.post('/login', async (req, res) => {
 
 
 router.post('/logout', async (req, res) => {
+  console.log("CSRF Token received from logout post request:", req.body._csrf)
   try {
     res.clearCookie("jwt", {
       httpOnly: true, // Prevents JavaScript access to cookies
@@ -163,7 +199,6 @@ router.post('/logout', async (req, res) => {
 
 });
 
-
 function getUser () {
   console.log("GETUSER:", userObj);
   return userObj;
@@ -173,8 +208,42 @@ function setUser(newUser) {
   userObj = newUser;
 }
 
+router.post('/endRound', async (req, res) => {
+  
+  
+  const { score } = req.body;
+
+  req.session.gameData.totalScore += score;
+  req.session.gameData.currentRound += 1;
+  console.log("Current Round",req.session.gameData.currentRound)
+
+  if (req.session.gameData.currentRound % req.session.gameData.maxRoundsBeforeSave === 0) {
+    try {
+      await User.findOneAndUpdate(
+        { username: getUser().username },
+        { $inc: { points: req.session.gameData.totalScore } } 
+      );
+
+
+      // Reset session score after saving to database
+      req.session.gameData.totalScore = 0;
+      console.log("User points updated in MongoDB");
+
+    } catch (error) {
+      console.error("Error updating points in MongoDB:", error);
+      return res.status(500).send("Failed to update points");
+    }
+  }
+
+  res.send({ message: 'Round data saved to session.' });
+});
+
 module.exports = {
   getUser,
   setUser,
   router,
 };
+
+
+
+

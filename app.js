@@ -6,18 +6,37 @@ const path = require('path');
 const mongoose = require("mongoose");
 const {generateAccessToken, verifyAccessToken, verifyRefreshToken} = require('./authentication.js')
 const cookieParser = require('cookie-parser');
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
+const csurf = require("csurf");
+const session = require('express-session');
+const flash = require('express-flash');
+
+
+const csrfProtection = csurf({
+  cookie: {
+    httpOnly: true,  // Ensures the cookie is inaccessible via JavaScript
+    sameSite: 'Strict',  // Or 'Lax' depending on your requirements
+    secure: process.env.NODE_ENV === 'production',  // Ensure the cookie is only sent over HTTPS in production
+  }
+});
+//const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
 //require("dotenv").config();
 
 
 
 const app = express();
+app.use(flash());
 app.set('view engine', 'ejs');
-app.use(express.json())
+app.use(session({
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: true
+}));
 app.use(cookieParser());
-const userRoutes = require('./routes/user').router; 
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }));
 
-app.use('/api/users', require('./routes/user').router);
+const userRoutes = require('./routes/user').router; 
+app.use('/api/users', csrfProtection, userRoutes);
 //Cookie setup
 
 /*const cors = require('cors');
@@ -51,6 +70,12 @@ const client = new MongoClient(uri, {
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
+
+app.get('/api/get-csrf-token', csrfProtection, (req, res) => {
+
+  res.json({ csrfToken: req.csrfToken() });
+});
+
 app.get('/config', (req, res) =>{
   res.json({
     OPENCAGE_API_KEY: process.env.OPENCAGE_API_KEY,
@@ -62,20 +87,43 @@ app.get('/config', (req, res) =>{
 
 });
 
-app.get('/', (req, res) => {
-    console.log("CURRENT USER:", require('./routes/user').getUser());
+app.use((req,res,next)=>{
+  if(!req.session.gameData){
+    req.session.gameData = {
+      rounds: [],
+      totalScore: 0,
+      currentRound: 0,
+      maxRoundsBeforeSave: 5
+    }
+  }
+  next();
+});
 
-    res.render("home", {user: require('./routes/user').getUser()})
-    res.sendFile(path.join(__dirname, 'views', 'home.html'));
+app.get('/', csrfProtection, (req, res) => {
+    //res.clearCookie('_csrf', { path: '/' });
+    csrfToken = req.csrfToken()
+    console.log("CURRENT USER:", require('./routes/user').getUser());
+    if (require('./routes/user').getUser()) {
+      console.log("CSRF Token inserted into logout form:", csrfToken)
+    }
+    res.render("home", {
+      user: require('./routes/user').getUser(),
+      csrf_token: csrfToken
+    })
+    //res.sendFile(path.join(__dirname, 'views', 'home.html'));
 });
 
 app.get('/test', (req, res) => {
     res.send("Test message");
 });
 
-// Example route for another page
-app.get('/game', authenticateToken, (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'index.html'));
+app.get('/game', authenticateToken, csrfProtection, (req, res) => {
+
+    //res.sendFile(path.join(__dirname, 'views', 'index.html'));
+    res.render("index", {
+      csrf_token: req.csrfToken()
+    });
+  
 });
 
 app.get('/airport', (req, res) => {
@@ -86,15 +134,32 @@ app.get('/mall', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'malls.html'));
 });
 
-app.get('/register', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'signUp.html'));
+app.get('/register', csrfProtection, (req, res) => {
+  registerCsrfToken = req.csrfToken();
+  console.log("CSRF Token injected into register form:",registerCsrfToken);
+  res.render("signUp", {csrf_token: registerCsrfToken});
 });
 
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'signIn.html'));
+app.get('/login', csrfProtection, (req, res) => {
+  csrfToken = req.csrfToken()
+  console.log('CSRF token inserted into form:', csrfToken)
+  res.render("signIn", {
+    csrf_token: csrfToken,
+    message: req.flash('error')
+  });
 });
 
+app.get('/profile', (req, res) => {
+  res.render("profile", {});
+});
 
+app.use((err, req, res, next) => {
+  if (err.code === 'EBADCSRF') {
+    // Respond with a 403 Forbidden if the CSRF token is invalid
+    return res.status(403).send('Form tampered with or CSRF token invalid');
+  }
+  next(err); // Pass error to the next handler
+});
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
@@ -119,10 +184,11 @@ async function run() {
 async function authenticateToken(req, res, next) {
   // First check if cookies even exist. Redrect to login page in this case (placeholder for now)
   if (!req.cookies || Object.keys(req.cookies).length === 0) {
-    // TODO: Redirect to login page
-    console.log("if statement reached")
-    console.log('youre fired - trump')
-    return res.sendStatus(401);
+
+    return res.redirect('/login')
+
+
+    //return res.sendStatus(401);
   }
 
   
@@ -141,7 +207,8 @@ async function authenticateToken(req, res, next) {
     // Next time when they log in, both the refresh token and the access token will be renewed.
     if (!refreshToken) {
       // TODO: redirect to login page
-      res.sendStatus(401);
+      return res.redirect("/login")
+      //res.sendStatus(401);
     }
 
 
@@ -151,7 +218,8 @@ async function authenticateToken(req, res, next) {
     const refreshTokenResult = verifyRefreshToken(refreshToken) // First, verify the authenticity of the refresh token
     if (!refreshTokenResult.success) {
       console.log("THE REFRESH TOKEN IS INVALID")
-      return res.status(403).json({ error: refreshTokenResult.error });
+      return res.redirect("/login")
+      //return res.status(403).json({ error: refreshTokenResult.error });
     }
     
     // Get the decoded user data from the valid refresh token and use it to generate a new access token, storing it in cookie storage.
@@ -170,7 +238,8 @@ async function authenticateToken(req, res, next) {
   const verifyTokenResult = verifyAccessToken(token);
 
   if (!verifyTokenResult.success) {
-    return res.status(403).json({ error: verifyTokenResult.error });
+    return res.redirect("/login")
+    //return res.status(403).json({ error: verifyTokenResult.error });
   }
 
   // Append decoded user data to response header (to use in the future for profile page for example)

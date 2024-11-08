@@ -23,7 +23,7 @@ body {
     font-size: 70px;
 }
 
-#createAcct{
+#createAcct, #loginLink {
     color: yellow;
     text-align: center;
 
@@ -47,6 +47,11 @@ body {
     color: yellow;
     text-align: center;
     font-size: 18px;
+}
+
+#loginLinkActual {
+    color: white;
+    
 }
 
 
