@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const {generateAccessToken, verifyAccessToken, verifyRefreshToken} = require('./authentication.js')
 const cookieParser = require('cookie-parser');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+require("dotenv").config();
 
 
 const app = express();
