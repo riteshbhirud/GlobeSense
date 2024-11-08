@@ -7,7 +7,7 @@ const mongoose = require("mongoose");
 const {generateAccessToken, verifyAccessToken, verifyRefreshToken} = require('./authentication.js')
 const cookieParser = require('cookie-parser');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-require("dotenv").config();
+//require("dotenv").config();
 
 
 const app = express();
@@ -25,7 +25,7 @@ app.use(cors({
 }));
 
 app.use(express.urlencoded({ extended: true }));*/
-const port = 5550;
+const port = process.env.PORT || 5550;
 const uri = process.env.MONGODB_URI;
 
 
@@ -92,6 +92,7 @@ app.get('/login', (req, res) => {
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
+
 
 });
 

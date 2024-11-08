@@ -7,7 +7,7 @@ const {generateAccessToken, verifyAccessToken, generateRefreshToken, verifyRefre
 //const cookieParser = require('cookie-parser');
 //const app = express();
 //app.use(cookieParser());
-require('dotenv').config({path: "../.env"});
+//require('dotenv').config({path: "../.env"});
 mongoose.connect(process.env.MONGODB_URI);
 
 router.post('/register', async (req, res) => {
