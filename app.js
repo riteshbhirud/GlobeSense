@@ -1,5 +1,11 @@
 
 const express = require('express');
+const http = require("http");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const { Server } = require("socket.io");
+const sessionRoutes = require("./routes/sessions");
+const Session = require("./models/Session");
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const path = require('path');
@@ -9,6 +15,8 @@ const cookieParser = require('cookie-parser');
 const csurf = require("csurf");
 const session = require('express-session');
 const flash = require('express-flash');
+
+
 
 
 const csrfProtection = csurf({
@@ -25,18 +33,38 @@ const csrfProtection = csurf({
 
 const app = express();
 app.use(flash());
-app.set('view engine', 'ejs');
+
 app.use(session({
   secret: 'your-secret-key',
   resave: false,
   saveUninitialized: true
 }));
+// Middleware
 app.use(cookieParser());
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 
+app.use(cors());
+app.use(bodyParser.json());
+
+
 const userRoutes = require('./routes/user').router; 
 app.use('/api/users', csrfProtection, userRoutes);
+
+
+const server = http.createServer(app);
+//const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+      origin: "http://localhost:5550", // Allow your frontend's origin
+      methods: ["GET", "POST"],       // Allowed HTTP methods
+  }
+});
+
+
+
+
+
 //Cookie setup
 
 /*const cors = require('cors');
@@ -69,6 +97,7 @@ const client = new MongoClient(uri, {
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
+app.use("/api/sessions", sessionRoutes);
 
 
 app.get('/api/get-csrf-token', csrfProtection, (req, res) => {
@@ -153,6 +182,49 @@ app.get('/profile', (req, res) => {
   res.render("profile", {});
 });
 
+
+app.get('/multiplayer', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'multiplayer.html'));
+})
+
+app.get('/createGame', authenticateToken, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'createRoom.html'));
+})
+
+app.get('/join', authenticateToken, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'joinRoom.html'));
+
+  
+})
+
+
+app.get('/join/:gameId', authenticateToken, async (req, res) => {
+  gameId = req.params.gameId
+  
+  // check if game id exists in DB
+  try {
+
+    const gameSession = await Session.findOne({ inviteCode: gameId });
+    // check if active
+    if(gameSession){
+      if(gameSession.active === false){
+      
+        //res.json({username: require('./routes/user').getUser().username, gameId: gameId})
+        res.sendFile(path.join(__dirname, 'views', 'multiplayerGame.html'));
+      }else{
+        res.status(403).send("youre not invited lil bro")
+      }
+    } else {
+      res.status(404).send("Invalid Game ID")
+    }
+    
+  }
+  catch (error) {
+    console.error("Trouble fetching DB by gameID", error)
+  }
+
+})
+
 app.use((err, req, res, next) => {
   if (err.code === 'EBADCSRF') {
     // Respond with a 403 Forbidden if the CSRF token is invalid
@@ -161,7 +233,107 @@ app.use((err, req, res, next) => {
   next(err); // Pass error to the next handler
 });
 
-app.listen(port, () => {
+
+
+
+const activeSessions = {};
+
+io.on("connection", (socket) => {
+  console.log("A user connected");
+
+  // Handle joining a room
+  socket.on("joinRoom", async ({ inviteCode }) => {
+    try {
+      const session = await Session.findOne({ inviteCode:inviteCode  });
+
+      if (!session) {
+        socket.emit("errorMessage", "Invalid invite code. Please check and try again.");
+        return;
+      }
+      user = require('./routes/user').getUser()
+      if (!user) {
+        socket.emit("errorMessage", "Invalid User");
+        return;
+      }
+      let username = user.username
+      socket.username = username;
+
+
+      // Add user to the session
+      if (!session.players.has(username)) {
+        console.log(session.players)
+        
+        session.players.set(username, 5000);
+        await session.save();
+        console.log(session.players)
+      }
+
+      // Store in activeSessions for real-time updates
+      if (!activeSessions[inviteCode]){
+        activeSessions[inviteCode] = new Map();
+      }
+      if (!activeSessions[inviteCode].has(username)) {
+        activeSessions[inviteCode][username]= 5000;
+      }
+
+      socket.join(inviteCode);
+      io.to(inviteCode).emit("updatePlayerList", activeSessions[inviteCode]);
+
+      console.log(`User ${username} joined room ${inviteCode}`);
+
+      socket.emit('get-username',socket.username)
+    } catch (error) {
+      console.error("Error joining room:", error);
+      socket.emit("errorMessage", "An error occurred while joining the room.");
+    }
+  });
+
+  // Handle disconnection
+  ["disconnecting", "manualDisconnect"].forEach((event) => {
+    socket.on(event, async () => {
+      console.log(event)
+    
+      const rooms = Array.from(socket.rooms).slice(1); // Get rooms the user is in
+      //if activeSessions[inviteCode].has(username)
+      rooms.forEach( async (inviteCode) => {
+        if (activeSessions[inviteCode]) {
+          if(activeSessions[inviteCode].has(socket.username)){
+            activeSessions[inviteCode].delete(socket.username)
+          }
+          /*activeSessions[inviteCode] = activeSessions[inviteCode].filter(
+            (user) => user !== socket.username
+        
+          );*/
+          io.to(inviteCode).emit("updatePlayerList", activeSessions[inviteCode] );
+          try {
+            const session = await Session.findOne({ inviteCode });
+            if(session && session.players.has(socket.username)){
+                session.players.delete(socket.username)
+               // session.players = session.players.filter((player)=> player!==socket.username);
+                await session.save();
+            }
+      
+            console.log("A user disconnected");
+          }
+          catch (error) {
+            console.error("Error disconnecting from room:", error);
+            socket.emit("errorMessage", "An error occurred while disconnecting from the room.");
+          }
+        }
+  
+      });
+      
+      
+    });
+  })
+  
+});
+
+
+
+
+
+server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 
 

@@ -260,6 +260,7 @@ async function setCoordinates() {
   console.log("setCoordinates coordinates", coordinates);
   latitude = coordinates.latitude;
   longitude = coordinates.longitude;
+  
 
   try {
     const streetViewApiUrl = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${latitude},${longitude}&key=${googleAPIKey}&radius=100`;

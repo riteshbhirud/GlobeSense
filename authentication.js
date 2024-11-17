@@ -8,7 +8,7 @@ function generateAccessToken(user) {
     };
     
     const secret = process.env.JWT_SECRET_KEY;
-    const options = { expiresIn: 20 };
+    const options = { expiresIn: 600 };
   
     return jwt.sign(payload, secret, options);
 }
@@ -31,7 +31,7 @@ const payload = {
 };
 
 const secret = process.env.REFRESH_SECRET_KEY;
-const options = { expiresIn: 60 };
+const options = { expiresIn: 12000 };
 
 return jwt.sign(payload, secret, options);
 }

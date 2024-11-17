@@ -96,7 +96,7 @@ router.post('/login', async (req, res) => {
         httpOnly: true, // Prevents JavaScript access to cookies
         secure: true,   // Use secure cookies (only HTTPS) in production
         sameSite: "strict", // Helps prevent CSRF attacks
-        maxAge: 20000    // Cookie expiration set to 20 seconds
+        maxAge: 600000    // Cookie expiration set to 10 mins
       });
 
       // Ideally the refresh token should be stored in long-term storage such as a database
@@ -104,7 +104,7 @@ router.post('/login', async (req, res) => {
         httpOnly: true,  // Prevents JavaScript access to cookies
         secure: true,   // Use secure cookies (only HTTPS) in production
         sameSite: "strict", // Helps prevent CSRF attacks
-        maxAge: 60000    // Cookie expiration set to 1 min
+        maxAge: 1200000    // Cookie expiration set to 20 min
       });
       
       
