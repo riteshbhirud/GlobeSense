@@ -35,9 +35,13 @@ const app = express();
 app.use(flash());
 
 app.use(session({
-  secret: 'your-secret-key',
+  secret: process.env.SESSION_SECRET_KEY,
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: true,
+  cookie:{
+    secure: false,
+    maxAge: 60000
+  }
 }));
 // Middleware
 app.use(cookieParser());
@@ -105,6 +109,15 @@ app.get('/api/get-csrf-token', csrfProtection, (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
+app.get("/api/user", authenticateToken,(req,res)=>{
+  console.log("USER:", req.session.user);
+  if(req.session.user){
+    res.json({user: req.session.user})
+  }else{
+    console.log("Unable to send userdata from app.js")
+  }
+})
+
 app.get('/config', (req, res) =>{
   res.json({
     OPENCAGE_API_KEY: process.env.OPENCAGE_API_KEY,
@@ -128,17 +141,20 @@ app.use((req,res,next)=>{
   next();
 });
 
-app.get('/', csrfProtection, (req, res) => {
+app.get('/', authenticateToken, csrfProtection, (req, res) => {
     //res.clearCookie('_csrf', { path: '/' });
     csrfToken = req.csrfToken()
-    console.log("CURRENT USER:", require('./routes/user').getUser());
-    if (require('./routes/user').getUser()) {
+    console.log("CURRENT USER:", req.user);
+    if (req.user) {
       console.log("CSRF Token inserted into logout form:", csrfToken)
     }
-    res.render("home", {
-      user: require('./routes/user').getUser(),
+    console.log("USERNAME:", req.user?.username)
+    let user = req.session.user
+    res.render("home",{ 
+      user: user,
       csrf_token: csrfToken
     })
+    console.log(req.session)
     //res.sendFile(path.join(__dirname, 'views', 'home.html'));
 });
 
@@ -147,11 +163,14 @@ app.get('/test', (req, res) => {
 });
 
 app.get('/game', authenticateToken, csrfProtection, (req, res) => {
+  if (!req.user) {
+    return res.redirect('/login')
+  }
 
-    //res.sendFile(path.join(__dirname, 'views', 'index.html'));
-    res.render("index", {
-      csrf_token: req.csrfToken()
-    });
+  //res.sendFile(path.join(__dirname, 'views', 'index.html'));
+  res.render("index", {
+    csrf_token: req.csrfToken()
+  });
   
 });
 
@@ -188,10 +207,16 @@ app.get('/multiplayer', (req, res) => {
 })
 
 app.get('/createGame', authenticateToken, (req, res) => {
+  if (!req.user) {
+    return res.redirect('/login')
+  }
   res.sendFile(path.join(__dirname, 'views', 'createRoom.html'));
 })
 
 app.get('/join', authenticateToken, (req, res) => {
+  if (!req.user) {
+    return res.redirect('/login')
+  }
   res.sendFile(path.join(__dirname, 'views', 'joinRoom.html'));
 
   
@@ -233,7 +258,27 @@ app.use((err, req, res, next) => {
   next(err); // Pass error to the next handler
 });
 
+/*io.use((socket, next) => {
+  console.log(socket.request.headers)
+  console.log("HANDSHAKE:", socket.handshake.headers)
+  // Extract token from cookies (since cookies are automatically sent by the browser)
+  const token = socket.request.headers.cookie && socket.request.headers.cookie.jwt;
+  console.log("TOKEN RECEIVED IN SOCKET CONNECTION:", token)
+  if (!token) {
+    return next(new Error('Authentication error'));
+  }
 
+  // Verify the token and get the decoded user information
+  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+    if (err) {
+      return next(new Error('Authentication error'));
+    }
+
+    // Attach user information (like username) to the socket object
+    socket.username = decoded.username; // Assume 'decoded' contains user info (e.g., { username: 'user123' })
+    next();
+  });
+});*/
 
 
 const activeSessions = {};
@@ -242,7 +287,7 @@ io.on("connection", (socket) => {
   console.log("A user connected");
 
   // Handle joining a room
-  socket.on("joinRoom", async ({ inviteCode }) => {
+  socket.on("joinRoom", async ({ inviteCode, username }) => {
     try {
       const session = await Session.findOne({ inviteCode:inviteCode  });
 
@@ -250,13 +295,15 @@ io.on("connection", (socket) => {
         socket.emit("errorMessage", "Invalid invite code. Please check and try again.");
         return;
       }
-      user = require('./routes/user').getUser()
+      /*user = require('./routes/user').getUser()
       if (!user) {
         socket.emit("errorMessage", "Invalid User");
         return;
       }
       let username = user.username
-      socket.username = username;
+      socket.username = username;*/
+      //let username = socket.username;
+      //console.log("socket.username =", username);
 
 
       // Add user to the session
@@ -281,7 +328,8 @@ io.on("connection", (socket) => {
 
       console.log(`User ${username} joined room ${inviteCode}`);
 
-      socket.emit('get-username',socket.username)
+      //socket.emit('get-username',socket.username)
+      socket.username = username
     } catch (error) {
       console.error("Error joining room:", error);
       socket.emit("errorMessage", "An error occurred while joining the room.");
@@ -297,8 +345,8 @@ io.on("connection", (socket) => {
       //if activeSessions[inviteCode].has(username)
       rooms.forEach( async (inviteCode) => {
         if (activeSessions[inviteCode]) {
-          if(activeSessions[inviteCode].has(socket.username)){
-            activeSessions[inviteCode].delete(socket.username)
+          if(activeSessions[inviteCode][socket.username] !== undefined){
+            delete activeSessions[inviteCode][socket.username]
           }
           /*activeSessions[inviteCode] = activeSessions[inviteCode].filter(
             (user) => user !== socket.username
@@ -354,10 +402,13 @@ async function run() {
 }
 
 async function authenticateToken(req, res, next) {
+  console.log("cookies received in authentication:", req.cookies);
   // First check if cookies even exist. Redrect to login page in this case (placeholder for now)
   if (!req.cookies || Object.keys(req.cookies).length === 0) {
-
-    return res.redirect('/login')
+    req.user = null;
+    next()
+    return
+    //return res.redirect('/login')
 
 
     //return res.sendStatus(401);
@@ -374,12 +425,17 @@ async function authenticateToken(req, res, next) {
 
     // Get the refresh token stored in cookie storage
     refreshToken = req.cookies.hasOwnProperty("refreshToken") ? req.cookies.refreshToken : null;
+    console.log("REFRESH TOKEN:", refreshToken)
 
     // If refresh token is missing, sign the user out (have placeholder for now)
     // Next time when they log in, both the refresh token and the access token will be renewed.
     if (!refreshToken) {
       // TODO: redirect to login page
-      return res.redirect("/login")
+      console.log("no refresh token")
+      req.user = null;
+      next();
+      return
+      //return res.redirect("/login")
       //res.sendStatus(401);
     }
 
@@ -390,29 +446,38 @@ async function authenticateToken(req, res, next) {
     const refreshTokenResult = verifyRefreshToken(refreshToken) // First, verify the authenticity of the refresh token
     if (!refreshTokenResult.success) {
       console.log("THE REFRESH TOKEN IS INVALID")
-      return res.redirect("/login")
+      req.user = null;
+      next();
+      return
+      //return res.redirect("/login")
       //return res.status(403).json({ error: refreshTokenResult.error });
     }
     
     // Get the decoded user data from the valid refresh token and use it to generate a new access token, storing it in cookie storage.
     const user = refreshTokenResult.data;
     token = generateAccessToken(user);
-    console.log("NEW TOKEN:", token)
     res.cookie("jwt", token, {
       httpOnly: true, // Prevents JavaScript access to cookies
       secure: true,   // Use secure cookies (only HTTPS) in production
       sameSite: "strict", // Helps prevent CSRF attacks
       maxAge: 20000    // Cookie expiration set to 20 seconds
     });
+    console.log("NEW TOKEN:", token)
+    
   }
 
   // Proceed with verifying authenticity of access token
   const verifyTokenResult = verifyAccessToken(token);
 
   if (!verifyTokenResult.success) {
-    return res.redirect("/login")
+    req.user = null;
+    next();
+    return
+    //return res.redirect("/login")
     //return res.status(403).json({ error: verifyTokenResult.error });
   }
+
+  
 
   // Append decoded user data to response header (to use in the future for profile page for example)
   req.user = verifyTokenResult.data;
