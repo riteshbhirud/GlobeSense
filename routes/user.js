@@ -49,7 +49,7 @@ router.post('/register', async (req, res) => {
       // Set the token as an HTTP-only cookie
       res.cookie("jwt", token, {
         httpOnly: true, // Prevents JavaScript access to cookies
-        secure: true,   // Use secure cookies (only HTTPS) in production
+        secure: false,   // Use secure cookies (only HTTPS) in production
         sameSite: "strict", // Helps prevent CSRF attacks
         maxAge: 20000    // Cookie expiration set to 20 seconds
       });
@@ -57,7 +57,7 @@ router.post('/register', async (req, res) => {
       // Ideally the refresh token should be stored in long-term storage such as a database
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,  // Prevents JavaScript access to cookies
-        secure: true,   // Use secure cookies (only HTTPS) in production
+        secure: false,   // Use secure cookies (only HTTPS) in production
         sameSite: "strict", // Helps prevent CSRF attacks
         maxAge: 60000    // Cookie expiration set to 1 min
       });
@@ -90,11 +90,15 @@ router.post('/login', async (req, res) => {
       //login logic
       const token = generateAccessToken(user);
       const refreshToken = generateRefreshToken(user);
+      console.log("tokens created through login:", token, refreshToken)
+      req.session.user = { username: user.username, email: user.email };
+      console.log(req.session)
+
 
       // Set the token as an HTTP-only cookie
       res.cookie("jwt", token, {
         httpOnly: true, // Prevents JavaScript access to cookies
-        secure: true,   // Use secure cookies (only HTTPS) in production
+        secure: false,   // Use secure cookies (only HTTPS) in production
         sameSite: "strict", // Helps prevent CSRF attacks
         maxAge: 600000    // Cookie expiration set to 10 mins
       });
@@ -102,7 +106,7 @@ router.post('/login', async (req, res) => {
       // Ideally the refresh token should be stored in long-term storage such as a database
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,  // Prevents JavaScript access to cookies
-        secure: true,   // Use secure cookies (only HTTPS) in production
+        secure: false,   // Use secure cookies (only HTTPS) in production
         sameSite: "strict", // Helps prevent CSRF attacks
         maxAge: 1200000    // Cookie expiration set to 20 min
       });
@@ -171,7 +175,7 @@ router.post('/login', async (req, res) => {
 });*/
 
 
-router.post('/logout', async (req, res) => {
+/*router.post('/logout', async (req, res) => {
   console.log("CSRF Token received from logout post request:", req.body._csrf)
   try {
     res.clearCookie("jwt", {
@@ -184,6 +188,10 @@ router.post('/logout', async (req, res) => {
       httpOnly: true,  // Prevents JavaScript access to cookies
       sameSite: "strict", // Helps prevent CSRF attacks
     });
+    req.session.destroy((err)=>{
+      console.log("Error destryoing the session",err);
+      return res.status(500).send("Logout Error")
+    })
     userObj = null;
     res.redirect("/")
     
@@ -197,6 +205,31 @@ router.post('/logout', async (req, res) => {
 
 
 
+});*/
+router.post('/logout', (req, res) => {
+  console.log("CSRF Token received from logout post request:", req.body._csrf);
+
+  // Clear cookies first
+  res.clearCookie("jwt", {
+    httpOnly: true, // Prevents JavaScript access to cookies
+    sameSite: "strict", // Helps prevent CSRF attacks
+  });
+  res.clearCookie("refreshToken", {
+    httpOnly: true, // Prevents JavaScript access to cookies
+    sameSite: "strict", // Helps prevent CSRF attacks
+  });
+
+  // Destroy the session
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Error destroying the session:", err);
+      return res.status(500).send("Logout Error"); // Send response only once
+    }
+
+    console.log("Session destroyed successfully");
+    userObj = null; // Reset the global user object
+    res.redirect("/"); // Redirect only after session is destroyed
+  });
 });
 
 function getUser () {
