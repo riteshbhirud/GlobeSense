@@ -3,9 +3,48 @@ const socket = io("http://127.0.0.1:5550");
 const urlParams = new URL(window.location.href);
 let inviteCode = urlParams.pathname.split('/').pop()
 console.log("Invite Code", inviteCode)
-socket.emit("joinRoom", { inviteCode: inviteCode });
+/*fetch("/api/user",{
+  method: "GET",
+  credentials: "include",
+}).then(response => {
+  if(!response.ok){
+    throw new Error('Failed to fetch user');
+  }
+  return response.json;
+})
+.then((data)=>{
+  console.log("Logged-in user front end",data.user)
+  socket.username = data.user.username
+  socket.emit("joinRoom", { inviteCode: inviteCode });
+})
+.catch((error)=>{
+  console.error("Error detching user",error)
+})*/
 
-async function getUsername() {
+
+async function fetchUserAndJoinRoom(inviteCode) {
+  try {
+    const response = await fetch("/api/user", {
+      method: "GET",
+      credentials: "include", // Ensures cookies are sent with the request
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch user');
+    }
+
+    const data = await response.json(); // Parse the JSON response
+    console.log("Logged-in user front end", data.user);
+
+    //socket.username = data.user.username; // Set the socket username
+    //console.log("Setting socket username to:", socket.username);
+    socket.emit("joinRoom", { inviteCode: inviteCode, username: data.user.username }); // Emit the joinRoom event
+  } catch (error) {
+    console.error("Error fetching user", error);
+  }
+}
+
+/*async function getUsername() {
   return new Promise((resolve) => {
     socket.on("get-username", (username) => {
       socket.username = username;
@@ -18,11 +57,12 @@ async function getUsername() {
 
 (async () => {
   const username = await getUsername(); // Wait for the username to be resolved
-  console.log("OUTSIDE", username);
-
+  console.log("OUTSIDE", username);*/
   // Ensure the alert is executed after username is fetched
-  alert(`${socket.username} has joined room ${inviteCode}`);
-})();
+
+fetchUserAndJoinRoom(inviteCode);
+
+alert(`${socket.username} has joined room ${inviteCode}`);
 
 const playerListDiv = document.getElementById("playerList");
 const disconnectForm = document.getElementById("disconnectForm")
