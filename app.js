@@ -110,6 +110,7 @@ app.get('/api/get-csrf-token', csrfProtection, (req, res) => {
 });
 
 app.get("/api/user", authenticateToken,(req,res)=>{
+  console.log()
   console.log("USER:", req.session.user);
   if(req.session.user){
     res.json({user: req.session.user})
@@ -149,7 +150,7 @@ app.get('/', authenticateToken, csrfProtection, (req, res) => {
       console.log("CSRF Token inserted into logout form:", csrfToken)
     }
     console.log("USERNAME:", req.user?.username)
-    let user = req.session.user
+    let user = req.user
     res.render("home",{ 
       user: user,
       csrf_token: csrfToken
@@ -224,6 +225,9 @@ app.get('/join', authenticateToken, (req, res) => {
 
 
 app.get('/join/:gameId', authenticateToken, async (req, res) => {
+  if (!req.user) {
+    return res.redirect('/login')
+  }
   gameId = req.params.gameId
   
   // check if game id exists in DB
@@ -233,9 +237,12 @@ app.get('/join/:gameId', authenticateToken, async (req, res) => {
     // check if active
     if(gameSession){
       if(gameSession.active === false){
-      
+        let isHost = req.user.username === gameSession.host
         //res.json({username: require('./routes/user').getUser().username, gameId: gameId})
-        res.sendFile(path.join(__dirname, 'views', 'multiplayerGame.html'));
+        res.render("multiplayerGame", {
+          isHost: isHost
+        })
+        //res.sendFile(path.join(__dirname, 'views', 'multiplayerGame.html'));
       }else{
         res.status(403).send("youre not invited lil bro")
       }
@@ -324,6 +331,7 @@ io.on("connection", (socket) => {
       }
 
       socket.join(inviteCode);
+      console.log("LINE 328:", socket.rooms)
       io.to(inviteCode).emit("updatePlayerList", activeSessions[inviteCode]);
 
       console.log(`User ${username} joined room ${inviteCode}`);
@@ -336,14 +344,245 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("startGame", async (inviteCode) => {
+    //Global vars from script.js
+    let latitude;
+    let longitude;
+    let retryCount = 0;
+    const maxRetries = 20;
+    let encodedCountry;
+    let url;
+    let streetViewStatus= false;
+    let googleAPIKey = process.env.GOOGLE_API_KEY
+    let jamendoClientID = process.env.JAMENDO_CLIENT_ID
+    let openCageAPIKey = process.env.OPENCAGE_API_KEY
+    let cities = ["New%20York", "New%20Delhi", "Los%20Angeles", "Chicago", "Toronto", "Mexico%20City", "Houston", "Vancouver",
+      "San%20Francisco", "Montreal", "Miami", "São%20Paulo", "Buenos%20Aires", "Rio%20de%20Janeiro",
+      "Santiago", "Bogotá", "Lima", "Caracas", "Medellín", "Montevideo", "Quito", "London",
+      "Paris", "Berlin", "Madrid", "Rome", "Amsterdam", "Vienna", "Zurich", "Warsaw",
+      "Oslo", "Tokyo", "Shanghai", "Beijing", "Seoul", "Dharavi", "Bangkok", "Jakarta",
+      "Manila", "Singapore", "Kuala%20Lumpur", "Cairo", "Nairobi", "Johannesburg",
+      "Accra", "Algiers", "Addis%20Ababa", "Casablanca", "Kinshasa", "Dakar", "Sydney",
+      "Melbourne", "Brisbane", "Perth", "Auckland", "Wellington", "Canberra", "Adelaide",
+      "Hobart", "Suva", "Istanbul", "Moscow", "Kiev", "St.%20Petersburg", "Dubai", "Abu%20Dhabi",
+      "Tehran", "Riyadh", "Tel%20Aviv", "Jerusalem", "Doha", "Kuwait%20City", "Baku", "Ankara",
+      "Baghdad", "Damascus", "Amman", "Muscat", "Beirut", "Manama", "Dhaka", "Karachi",
+      "Islamabad", "Colombo", "Kathmandu", "Thimphu", "Male", "Hanoi", "Ho%20Chi%20Minh%20City",
+      "Phnom%20Penh", "Vientiane", "Yangon", "Naypyidaw", "Busan", "Taipei", "Tokyo", "Osaka",
+      "Nagoya", "Sapporo", "Kyoto", "Shenzhen", "Guangzhou", "Chengdu", "Wuhan",
+      "Atlanta", "Boston", "Dallas", "Phoenix", "Philadelphia", "San%20Diego", "San%20Jose",
+      "Austin", "Denver", "Orlando", "Las%20Vegas", "Tampa", "Charlotte", "Detroit",
+      "Seattle", "Washington%20D.C.", "Baltimore", "Minneapolis", "Cleveland", "Pittsburgh",
+      "Cincinnati", "Indianapolis", "Kansas%20City", "Milwaukee", "St.%20Louis", "Buffalo",
+      "Salt%20Lake%20City", "Columbus", "Richmond", "Birmingham", "Tucson", "Portland",
+      "Sacramento", "Reno", "Anchorage", "Honolulu", "Memphis", "Louisville", "New%20Orleans",
+      "Oklahoma%20City", "Albuquerque", "El%20Paso", "Raleigh", "Nashville", "Tallahassee",
+      "Montpellier", "Strasbourg", "Marseille", "Lyon", "Nice", "Bordeaux", "Toulouse",
+      "Munich", "Frankfurt", "Hamburg", "Cologne", "Düsseldorf", "Stuttgart", "Leipzig",
+      "Dresden", "Hannover", "Rotterdam", "The%20Hague", "Utrecht", "Brussels", "Antwerp",
+      "Ghent", "Bruges", "Copenhagen", "Stockholm", "Gothenburg", "Malmö", "Helsinki",
+      "Tallinn", "Riga", "Vilnius", "Prague", "Bratislava", "Budapest", "Ljubljana",
+      "Zagreb", "Belgrade", "Sofia", "Bucharest", "Skopje", "Tirana", "DAV Aundh Pune Maharashtra", "Podgorica",
+      "Sarajevo", "Luxembourg", "Reykjavik", "Dublin", "Edinburgh", "Glasgow", "Cardiff",
+      "Belfast", "Lisbon", "Porto", "Valencia", "Seville", "Malaga", "Bilbao",
+      "Granada", "Palermo", "Naples", "Florence", "Venice", "Milan", "Turin",
+      "Genoa", "Bologna", "Verona", "Zurich", "Geneva", "Bern", "Basel", "Lausanne",
+      "Lugano", "Lucerne", "Hambantota", "Jaffna", "Trincomalee", "Batticaloa",
+      "Galle", "Kurunegala", "Kandy", "Polonnaruwa", "Sigiriya", "Anuradhapura",
+      "Matara", "Badulla", "Embilipitiya", "Ratnapura", "Habarana", "Negombo",
+      "Chilaw", "Vavuniya", "Matale", "Avissawella", "Tangalle", "Moratuwa",
+      "Brasilia", "Recife", "Curitiba", "Salvador", "Porto%20Alegre", "Fortaleza",
+      "Brasov", "Cluj-Napoca", "Constanta", "Timișoara", "Sibiu", "Debrecen", "Szeged", "Statue of Unity",
+      "Miskolc", "Zaragoza", "Cordoba", "Toledo", "Alicante", "Malaga", "Granada",
+      "Valencia", "Bremen", "Nuremberg", "Dortmund", "Essen", "Bochum", "Leverkusen",
+      "Duisburg", "Wuppertal", "Bielefeld", "Münster", "Krakow", "Wroclaw", "Lodz",
+      "Katowice", "Gdansk", "Szczecin", "Poznan", "Vilnius", "Kaunas", "Klaipeda",
+      "Riga", "Tallinn", "Tartu", "Pärnu", "Antwerp", "Ghent", "Niagara Falls", "Bruges", "Namur",
+      "Liège", "Arlon", "Charleroi", "Mons", "Leuven", "Mechelen", "Namur", "Brest",
+      "Nantes", "Rennes", "Biarritz", "Toulon", "Dijon", "Grenoble", "Bastia", "SNBP International School Rahatani Pune Maharashtra", "Rose Icon Pune Maharashtra India", "Boston", "Amherst", "Lowell", "1400 Gorham St", "1400 Gorham St Lowell MA", "Elm Hall Amherst MA"]
+    
+    
+    function wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function getRandomCoordinates() {
+      let geometry = null;
+      let city = cities[Math.floor(Math.random() * cities.length)]
+      console.log("city:", city)
+
+      const boundingBoxApiUrl = `https://nominatim.openstreetmap.org/search?q=${city}&format=json&polygon_threshold=10&polygon_geojson=1&addressdetails=1`
+    
+      try {
+        const coordinatesResponse = await fetch(boundingBoxApiUrl)
+        if (!coordinatesResponse.ok) {
+          throw new Error('Network response was not ok');
+    
+        }
+        const coordinatesData = await coordinatesResponse.json()
+    
+        coordinates = coordinatesData[0].geojson.coordinates[0]
+        console.log("OSM COUNTRY:", coordinatesData[0].address.country);
+        encodedCountry = encodeURIComponent(coordinatesData[0].address.country);
+        console.log("OSM ENCODED COUNTRY:", encodedCountry);
+        if (coordinates.length == 1) {
+          coordinates = coordinates[0]
+        }
+        //OSaka 00 0/1 !=1
+        //NY 000 0/1 ==1
+        latitude = coordinates[0][1]
+        longitude = coordinates[0][0]
+    
+      } catch (error) {
+        console.error('Fetch error:', error);
+      }
+    
+      console.log("ORIGINAL COORDINATES", latitude, longitude);
+    
+      const roadApiUrl = `https://api.opencagedata.com/geocode/v1/json?q=${latitude},${longitude}&key=${openCageAPIKey}&language=en&roadinfo=1&pretty=1`;
+      
+    
+      try {
+        const response = await fetch(roadApiUrl);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        console.log(data)
+    
+        if (data.results.length > 0) {
+          geometry = data.results[0].geometry;
+          console.log("CHANGED COORDINATE", geometry);
+          console.log(geometry.lat);
+          console.log(geometry.lng);
+          return {
+            latitude: geometry.lat,
+            longitude: geometry.lng
+          };
+        } else {
+          // Wait for 2 seconds before retrying with another random coordinate
+          await wait(2000);
+          return await getRandomCoordinates();
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        // Wait for 2 seconds before retrying on error
+        await wait(2000);
+        return await getRandomCoordinates(); // Retry on error
+      }
+    }
+    
+
+
+    
+    async function setCoordinates() {
+      console.log("CALLING FETCH COUNTRY FUNCTION")
+      if (retryCount >= maxRetries) {
+        console.error('Max retry limit reached. Stopping further attempts.');
+        return null;
+      }
+
+      retryCount++;
+      const coordinates = await getRandomCoordinates();
+      console.log("setCoordinates coordinates", coordinates);
+      latitude = coordinates.latitude;
+      longitude = coordinates.longitude;
+      
+
+      try {
+        const streetViewApiUrl = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${latitude},${longitude}&key=${googleAPIKey}&radius=100`;
+        const streetViewResponse = await fetch(streetViewApiUrl);
+
+        if (!streetViewResponse.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const streetViewData = await streetViewResponse.json();
+        if (streetViewData.status === "OK") {
+          streetViewStatus = true;
+          console.log("GOOGLE STREET VIEW SUCCESSFUL:", latitude, longitude, "are able to be displayed by google street view.")
+          /*document.getElementById("timer").style.display = "block";
+          initialize(parseFloat(latitude), parseFloat(longitude));
+          timer1();*/
+          return encodedCountry;
+        } else if (streetViewData.status === "ZERO_RESULTS") {
+          console.warn('No Street View coverage at this location. Fetching new location...');
+          return setCoordinates();
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        await wait(2000); // Retry after 2 seconds
+        return setCoordinates();
+      }
+
+      return null; // Fallback  in case of an unexpected failure
+    }
+
+    const country = await setCoordinates();
+    if (country) {
+      //encodedCountry = encodeURIComponent(country);
+      console.log("Country:", country);
+  
+      //const musicApiUrl = `https://de1.api.radio-browser.info/json/stations/search?country=${encodedCountry}&tag=jazz&limit=1`;
+      const artistApiUrl = `https://api.jamendo.com/v3.0/artists/locations/?client_id=${jamendoClientID}&format=jsonpretty&limit=5&haslocation=true&location_coords=${latitude}_${longitude}&location_radius=200`; // takes in coordinates to get artist
+  
+      try {
+        //const response = await fetch(musicApiUrl);
+        const response = await fetch(artistApiUrl);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+  
+        if (data.results.length === 0) {
+          startProcessRadio()
+        }
+        else {
+          console.log("JAMENDO BEING USED")
+          randArtist = Math.floor(Math.random() * data.results.length)
+          let artistId = data.results[randArtist].id;
+          const trackApiUrl = `https://api.jamendo.com/v3.0/artists/tracks/?client_id=${jamendoClientID}&format=jsonpretty&order=track_name_desc&id=${artistId}&audioformat=mp31`; // takes in artist id to get stream url
+          const trackResponse = await fetch(trackApiUrl);
+          if (!trackResponse.ok) {
+            throw new Error('Network response was not ok');
+          }
+          const trackData = await trackResponse.json();
+          randSong = Math.floor(Math.random() * trackData.results[0].tracks.length)
+          songName = trackData.results[0].tracks[randSong].name
+          artistName = data.results[randArtist].name
+          console.log("track data:", trackData);
+          console.log("Artist name:", artistName)
+          console.log(`Song name: ${songName}`)
+          url = trackData.results[0].tracks[randSong].audio;
+          console.log("url:", url);
+          //music.src = url;
+        }
+      } catch (error) {
+        console.error('Music Fetch error:', error);
+      }
+    }
+    
+
+    
+    console.log(inviteCode)
+    console.log("INSIDE STARTGAME SOCKET HANDLER")
+    io.to(inviteCode).emit("gameStarted", {latitude: latitude, longitude: longitude, musicUrl: url});
+
+
+
+  });
+
   // Handle disconnection
   ["disconnecting", "manualDisconnect"].forEach((event) => {
     socket.on(event, async () => {
       console.log(event)
     
       const rooms = Array.from(socket.rooms).slice(1); // Get rooms the user is in
+      console.log("AFTER LINE 345")
+      console.log(socket.rooms)
       //if activeSessions[inviteCode].has(username)
       rooms.forEach( async (inviteCode) => {
+        console.log("reached foreach on 349")
         if (activeSessions[inviteCode]) {
           if(activeSessions[inviteCode][socket.username] !== undefined){
             delete activeSessions[inviteCode][socket.username]
@@ -352,13 +591,21 @@ io.on("connection", (socket) => {
             (user) => user !== socket.username
         
           );*/
+          console.log("reached updatePlayerList on 358")
           io.to(inviteCode).emit("updatePlayerList", activeSessions[inviteCode] );
           try {
             const session = await Session.findOne({ inviteCode });
             if(session && session.players.has(socket.username)){
+                console.log("session.players type:", typeof session.players)
                 session.players.delete(socket.username)
-               // session.players = session.players.filter((player)=> player!==socket.username);
+               
                 await session.save();
+                if (session.players.size === 0) {
+                  console.log("about to delete session from DB")
+                  await Session.findOneAndDelete({ inviteCode: inviteCode });
+                }
+               // session.players = session.players.filter((player)=> player!==socket.username);
+            
             }
       
             console.log("A user disconnected");

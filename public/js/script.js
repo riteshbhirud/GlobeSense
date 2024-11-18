@@ -18,6 +18,8 @@ let marker;
 let ActualLocationMarker;
 var latlng;
 let  streetViewStatus= false;
+
+
 let songName;
 let artistName;
 
@@ -198,9 +200,9 @@ async function getRandomCoordinates() {
     const coordinatesData = await coordinatesResponse.json()
 
     coordinates = coordinatesData[0].geojson.coordinates[0]
-    console.log("OPENCAGE COUNTRY:", coordinatesData[0].address.country);
+    console.log("OSM COUNTRY:", coordinatesData[0].address.country);
     encodedCountry = encodeURIComponent(coordinatesData[0].address.country);
-    console.log("ENCODED OPENCAGE COUNTRY:", encodedCountry);
+    console.log("OSM ENCODED COUNTRY:", encodedCountry);
     if (coordinates.length == 1) {
       coordinates = coordinates[0]
     }
