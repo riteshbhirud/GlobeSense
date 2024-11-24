@@ -15,6 +15,7 @@ const cookieParser = require('cookie-parser');
 const csurf = require("csurf");
 const session = require('express-session');
 const flash = require('express-flash');
+const user = require('./models/user');
 
 
 
@@ -289,6 +290,7 @@ app.use((err, req, res, next) => {
 
 
 const activeSessions = {};
+// { inviteCode: { numGuesses: 0, users: {u1: {points: 5000, rawPoints: _, guess: _, distance: _, time: _}, ...}, eliminatedUsers: [] } }
 
 io.on("connection", (socket) => {
   console.log("A user connected");
@@ -311,7 +313,7 @@ io.on("connection", (socket) => {
       socket.username = username;*/
       //let username = socket.username;
       //console.log("socket.username =", username);
-
+      
 
       // Add user to the session
       if (!session.players.has(username)) {
@@ -325,19 +327,26 @@ io.on("connection", (socket) => {
       // Store in activeSessions for real-time updates
       if (!activeSessions[inviteCode]){
         activeSessions[inviteCode] = new Map();
+        activeSessions[inviteCode].set("numGuesses", 0)
+        activeSessions[inviteCode].set("users", new Map());
+        console.log("MAP OF USERS AFTER INITIALIZTION:", activeSessions[inviteCode].get("users"))
+        activeSessions[inviteCode].set("eliminatedUsers", new Set());
+        
       }
-      if (!activeSessions[inviteCode].has(username)) {
-        activeSessions[inviteCode][username]= 5000;
+      console.log("MAP OF USERS:", activeSessions[inviteCode].get("users"))
+      if (!activeSessions[inviteCode].get("users").has(username)) {
+        activeSessions[inviteCode].get("users").set(username, new Map());
+        activeSessions[inviteCode].get("users").get(username).set("points", 5000);
       }
 
       socket.join(inviteCode);
       console.log("LINE 328:", socket.rooms)
-      io.to(inviteCode).emit("updatePlayerList", activeSessions[inviteCode]);
+      io.to(inviteCode).emit("updatePlayerList", Array.from(activeSessions[inviteCode].get("users").keys()));
 
       console.log(`User ${username} joined room ${inviteCode}`);
 
       //socket.emit('get-username',socket.username)
-      socket.username = username
+      socket.username = username 
     } catch (error) {
       console.error("Error joining room:", error);
       socket.emit("errorMessage", "An error occurred while joining the room.");
@@ -345,6 +354,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("startGame", async (inviteCode) => {
+    // reset data from previous round, if applicable
+    activeSessions[inviteCode].set("numGuesses", 0)
+    activeSessions[inviteCode].get("eliminatedUsers").clear();
+
     //Global vars from script.js
     let latitude;
     let longitude;
@@ -566,61 +579,144 @@ io.on("connection", (socket) => {
     
     console.log(inviteCode)
     console.log("INSIDE STARTGAME SOCKET HANDLER")
-    io.to(inviteCode).emit("gameStarted", {latitude: latitude, longitude: longitude, musicUrl: url});
+    const isEliminated = activeSessions[inviteCode].get("users").get(socket.username).get("points") <= 0
+    io.to(inviteCode).emit("gameStarted", {latitude: latitude, longitude: longitude, musicUrl: url, isEliminated: isEliminated});
 
 
 
   });
 
-  // Handle disconnection
-  ["disconnecting", "manualDisconnect"].forEach((event) => {
-    socket.on(event, async () => {
-      console.log(event)
+  socket.on("iAmDone", async ({inviteCode, userGuess, userPoints, userdistance, elapsedTime}) => {
+    console.log(`${socket.username} is done.`)
+    // increment count 
+    activeSessions[inviteCode].set("numGuesses", activeSessions[inviteCode].get("numGuesses")+1)
+    console.log("Number of players who have guessed so far:", activeSessions[inviteCode].get("numGuesses"))
     
-      const rooms = Array.from(socket.rooms).slice(1); // Get rooms the user is in
-      console.log("AFTER LINE 345")
-      console.log(socket.rooms)
-      //if activeSessions[inviteCode].has(username)
-      rooms.forEach( async (inviteCode) => {
-        console.log("reached foreach on 349")
-        if (activeSessions[inviteCode]) {
-          if(activeSessions[inviteCode][socket.username] !== undefined){
-            delete activeSessions[inviteCode][socket.username]
-          }
-          /*activeSessions[inviteCode] = activeSessions[inviteCode].filter(
-            (user) => user !== socket.username
-        
-          );*/
-          console.log("reached updatePlayerList on 358")
-          io.to(inviteCode).emit("updatePlayerList", activeSessions[inviteCode] );
-          try {
-            const session = await Session.findOne({ inviteCode });
-            if(session && session.players.has(socket.username)){
-                console.log("session.players type:", typeof session.players)
-                session.players.delete(socket.username)
-               
-                await session.save();
-                if (session.players.size === 0) {
-                  console.log("about to delete session from DB")
-                  await Session.findOneAndDelete({ inviteCode: inviteCode });
-                }
-               // session.players = session.players.filter((player)=> player!==socket.username);
-            
-            }
-      
-            console.log("A user disconnected");
-          }
-          catch (error) {
-            console.error("Error disconnecting from room:", error);
-            socket.emit("errorMessage", "An error occurred while disconnecting from the room.");
-          }
+
+    // store all guess data in activeSessions for the user
+    // rawPoints: _, guess: _, distance: _, time: _
+    activeSessions[inviteCode].get("users").get(socket.username).set("rawPoints" , userPoints);
+    activeSessions[inviteCode].get("users").get(socket.username).set("guess", userGuess);
+    activeSessions[inviteCode].get("users").get(socket.username).set("distance", userdistance);
+    activeSessions[inviteCode].get("users").get(socket.username).set("elapsedTime", elapsedTime);
+    
+    // check if round is over (all players have guessed)
+    mapOfUsers = activeSessions[inviteCode].get("users")
+    activeUsers = 0;
+    for (const [username, userData] of mapOfUsers) {
+      if (userData.get("points") > 0) {
+        activeUsers++;
+      }
+    }
+    console.log("Number of active users in the game:", activeUsers)
+
+    if (activeSessions[inviteCode].get("numGuesses") === activeUsers) {
+      console.log("The number of guesses = active users")
+
+      // calculate the updated score of each user
+      winner = null
+      bestScore = 0
+      for (const [username, userData] of mapOfUsers) {
+        if (userData.get("points") <= 0) {
+          continue  // user is eliminated
         }
-  
-      });
+        
+        if (userData.get("rawPoints") > bestScore) {
+          winner = username
+          bestScore = userData.get("rawPoints")
+        }
+      } 
+
+      for (const [username, userData] of mapOfUsers) {
+        if (userData.get("points") <= 0) {
+          continue  // user is eliminated
+        }
+
+        userData.set("points", userData.get("points") - Math.round(((bestScore - userData.get("rawPoints"))*0.3)))
+        if (userData.get("points") < 0) {
+          userData.set("points", 0);
+          activeSessions[inviteCode].get("eliminatedUsers").add(username)
+          
+        }
+      }
+      function mapToObject(map) {
+        const obj = {};
+        for (const [key, value] of map.entries()) {
+            obj[key] = value instanceof Map ? mapToObject(value) : value;
+        }
+        return obj;
+      }
+      // send activeSessions[inviteCode]["users"]
+      console.log("USERS FROM APP.JS:", activeSessions[inviteCode].get("users"))
+      console.log("ELIM USERS",activeSessions[inviteCode].get("eliminatedUsers"))
+
+      roundData = mapToObject(activeSessions[inviteCode].get("users"))
+
       
+
+      io.to(inviteCode).emit("roundStatsCollected", {eliminatedUsers: Array.from(activeSessions[inviteCode].get("eliminatedUsers")), roundData: roundData})
       
-    });
+
+
+
+    }
+
+
+
+
+
   })
+
+  // Handle disconnection
+  
+  //["disconnecting"/*, "manualDisconnect"*/].forEach((event) => {
+  socket.on("disconnecting", async () => {
+    console.log("disconnecting")
+  
+    const rooms = Array.from(socket.rooms).slice(1); // Get rooms the user is in
+    console.log("AFTER LINE 345")
+    console.log(socket.rooms)
+    //if activeSessions[inviteCode].has(username)
+    rooms.forEach( async (inviteCode) => {
+      console.log("reached foreach on 349")
+      if (activeSessions[inviteCode]) {
+        if(activeSessions[inviteCode].get("users").get(socket.username) !== undefined){
+          delete activeSessions[inviteCode].get("users").get(socket.username)
+        }
+        /*activeSessions[inviteCode] = activeSessions[inviteCode].filter(
+          (user) => user !== socket.username
+      
+        );*/
+        console.log("reached updatePlayerList on 358")
+        io.to(inviteCode).emit("updatePlayerList", Array.from(activeSessions[inviteCode].get("users").keys()) );
+        try {
+          const session = await Session.findOne({ inviteCode });
+          if(session && session.players.has(socket.username)){
+              console.log("session.players type:", typeof session.players)
+              session.players.delete(socket.username)
+              
+              await session.save();
+              if (session.players.size === 0) {
+                console.log("about to delete session from DB")
+                await Session.findOneAndDelete({ inviteCode: inviteCode });
+              }
+              // session.players = session.players.filter((player)=> player!==socket.username);
+          
+          }
+    
+          console.log("A user disconnected");
+        }
+        catch (error) {
+          console.error("Error disconnecting from room:", error);
+          socket.emit("errorMessage", "An error occurred while disconnecting from the room.");
+        }
+      }
+
+    });
+    
+    
+  });
+  //})
   
 });
 

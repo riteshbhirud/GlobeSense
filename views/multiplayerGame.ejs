@@ -34,9 +34,14 @@
             <button type = "button" id = "submit">Submit</button>
         </div>
     </div>
+    <div id="eliminationRoom">
+        You're out!
+    </div>
 
     <div id="endingDiv">
-        End of game.
+        <% if (isHost) { %>
+            <button type="button" id="nextRound">Start next round!</button>
+        <%} %>
     </div>
    
     <script src="/socket.io/socket.io.js"></script>

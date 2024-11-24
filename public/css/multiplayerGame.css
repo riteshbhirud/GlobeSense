@@ -15,7 +15,7 @@ body {
 }
 
 #parentMap {
-    display: block;
+    display: none;
 }
 
 #pano {
@@ -27,6 +27,7 @@ body {
     margin: 0; /* Remove any margin */
     padding: 0; /* Remove any padding */
   }
+  
   
   #map {
     position: absolute;
@@ -100,4 +101,12 @@ body {
   
   #flagImage{
       filter: invert(1);
+  }
+
+  .eliminated{
+    color:red;
+  }
+
+  #eliminationRoom {
+    display: none;
   }
