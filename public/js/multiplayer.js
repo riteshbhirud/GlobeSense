@@ -7,7 +7,7 @@ const lobbyDiv = document.getElementById("lobbyDiv")
 const endingDiv = document.getElementById("endingDiv")
 const parentMap = document.getElementById("parentMap");
 const eliminationRoom = document.getElementById("eliminationRoom")
-const nextRound = document.getElementById("nextRound")
+const leaderboardDiv = document.getElementById("leaderboard")
 let map;
 let panorama;
 let sec = 300;
@@ -21,6 +21,7 @@ let userLong;
 let userPoints;
 let actualLatitude;
 let actualLongitude;
+var timer;
 
 let inviteCode = urlParams.pathname.split('/').pop()
 console.log("Invite Code", inviteCode)
@@ -136,6 +137,7 @@ socket.on("updatePlayerList", (players) => {
 });
 
 socket.on("gameStarted", ({latitude, longitude, musicUrl, isEliminated}) => {
+  console.log("IN GAMESTARTED SOCKET LISTENER")
   if(map){
     clearAllMarkers();
   }
@@ -179,35 +181,16 @@ socket.on("gameStarted", ({latitude, longitude, musicUrl, isEliminated}) => {
 
     
     // Initialize the pano with given coordinates
-    function initialize(lat, lng) {
-      const fenway = { lat: lat, lng: lng };
     
-      panorama = new google.maps.StreetViewPanorama(
-        document.getElementById("pano"),
-        {
-          position: fenway,
-          pov: {
-            heading: 34,
-            pitch: 10,
-          },
-          disableDefaultUI: true,  // Disable default UI controls
-          linksControl: false,     // Disable navigation arrows
-          panControl: false,       // Disable panning control
-          addressControl: false,   // Disable street address display
-          showRoadLabels: false,   // Hide street name indications
-        }
-      );
-    
-    }
 
     window.initialize = initialize
 
     initialize(parseFloat(latitude), parseFloat(longitude));
     //set the resetLocation Btn
     document.getElementById('resetLocationButton').style.display = "block";
-    document.getElementById("resetLocationButton").addEventListener("click", ()=>{
-      initialize(latitude,longitude);
-    })
+    const boundInitialize = initialize.bind(null, latitude, longitude);
+    document.getElementById("resetLocationButton").removeEventListener("click", boundInitialize)
+    document.getElementById("resetLocationButton").addEventListener("click", boundInitialize);
     // Start timer
     timer1();
 
@@ -234,80 +217,46 @@ socket.on("gameStarted", ({latitude, longitude, musicUrl, isEliminated}) => {
     setTimeout(() => {
       map.invalidateSize();
     }, 100);
+
+    document.getElementById('parentMap').removeEventListener('mouseenter', expandMinimap);
+    document.getElementById('parentMap').removeEventListener('mouseleave', minimizeMinimap);
     
 
-    document.getElementById('parentMap').addEventListener('mouseenter', function () {
+    document.getElementById('parentMap').addEventListener('mouseenter', expandMinimap);
+    document.getElementById('parentMap').addEventListener('mouseleave', minimizeMinimap);
+
+    map.off("click");
+
+    map.on('click', function (e) {
+      e.originalEvent.stopPropagation();
       if (!GameOver) {
-        document.getElementById('map').style.width = '600px';
-        document.getElementById('map').style.height = '400px';
-        submitBtn.style.display = 'block';
+        latlng = e.latlng;
 
-        setTimeout(function () {
-          map.invalidateSize();
-        }, 100);
-        console.log("AFTER SETTIMEOUT JUST ABOU TO CHNGE BTN SIZE")
-        submitBtn.style.display = 'block';
-        submitBtn.style.bottom = '5px';
-        submitBtn.style.right = '30px';
-        submitBtn.style.width = '580px';
+        if (marker) {
+          map.removeLayer(marker);
+        }
+
+        marker = L.marker(latlng).addTo(map);
+
+        userLat = latlng.lat;
+        userLong = latlng.lng;
+        console.log(`Lat:${userLat}, Long:${userLong}`)
+        //console.log("Coordinates: " + latlng.lat + ", " + latlng.lng); // Log coordinates to console
+        //alert("Coordinates: " + latlng.lat + ", " + latlng.lng); // Show coordinates in an alert
       }
-
-
     });
-
-      document.getElementById('parentMap').addEventListener('mouseleave', function () {
-        // Hide the button and revert properties
-        if (!GameOver) {
-          submitBtn.style.width = '280px';
-          document.getElementById('map').style.width = '300px';
-          document.getElementById('map').style.height = '200px';
-          //submitBtn.style.display = 'block';
-        }
-
-
-
-
-        /*submitBtn.style.bottom = '6220px'; //Random out of screen coordinates
-        submitBtn.style.left = '1100px';*/
-
-      })
-
-
-
-      map.on('click', function (e) {
-        if (!GameOver) {
-          latlng = e.latlng;
-
-          if (marker) {
-            map.removeLayer(marker);
-          }
-
-          marker = L.marker(latlng).addTo(map);
-
-          userLat = latlng.lat;
-          userLong = latlng.lng;
-          console.log(`Lat:${userLat}, Long:${userLong}`)
-          //console.log("Coordinates: " + latlng.lat + ", " + latlng.lng); // Log coordinates to console
-          //alert("Coordinates: " + latlng.lat + ", " + latlng.lng); // Show coordinates in an alert
-        }
-      });
       //ClickAnswer
       
-
-      submitBtn.onclick = (e)=>{
-        console.log("end game submit button clicked")
-        clearInterval(timer);
-        endGame()
-        
-      }
+    submitBtn.removeEventListener("click", endGame);
+    submitBtn.addEventListener("click", endGame);
 
       //SpacebarAnswer
 
-      document.addEventListener("keydown", (event) => {
+      /*document.addEventListener("keydown", (event) => {
         if (event.key === " ") {
           //add later
         }
-      })
+      })*/
     
 
 
@@ -474,6 +423,7 @@ socket.on("roundStatsCollected", (data) => {
   roundData = Object.fromEntries(
     Object.entries(roundData).sort(([, a], [, b]) => b.points - a.points)
   );
+  leaderboardDiv.innerHTML = "";
   
   for (const [username, userData] of Object.entries(roundData)) {
     console.log("USERNAMAE:", username)
@@ -482,22 +432,23 @@ socket.on("roundStatsCollected", (data) => {
       if (eliminatedUsers.includes(username)) {
         latlng = {lat: userData.guess[0], lng: userData.guess[1]}
         L.marker(latlng).addTo(map);
-        endingDiv.innerHTML += `<p class="eliminated">${username}, Points: ${userData.points}, Distance: ${userData.distance}}</p>`
+        leaderboardDiv.innerHTML += `<p class="eliminated">${username}, Points: ${userData.points}, Distance: ${userData.distance}}</p>`
       }
     } else {
       latlng = {lat: userData.guess[0], lng: userData.guess[1]}
       L.marker(latlng).addTo(map);
-      endingDiv.innerHTML += `<p>${username}, Points: ${userData.points}, Distance: ${userData.distance}</p>`
+      leaderboardDiv.innerHTML += `<p>${username}, Points: ${userData.points}, Distance: ${userData.distance}</p>`
     }
     
   }
+  const nextRound = document.getElementById("nextRound")
   console.log("NEXT ROUND:", nextRound)
-  if (nextRound) {
+  /*if (nextRound) {
     console.log("next round reached")
     document.addEventListener("keydown", (e) => {
       if(e.key === " "){
 
-      console.log("INSIDE EVENTLISTENER")
+      console.log("INSIDE nextround EVENTLISTENER, about to start game")
       socket.emit("startGame", inviteCode)
 
       }
@@ -505,22 +456,84 @@ socket.on("roundStatsCollected", (data) => {
       //socket.emit("startGame", inviteCode)
      // clearAllMarkers();
     })
+  }*/
+
+  
+
+  if (nextRound) {
+    console.log("next round reached")
+    nextRound.removeEventListener("click", startGame)
+    nextRound.addEventListener("click", startGame)
   }
 
   
 })
 
+
+
 socket.on("errorMessage", (message) => {
   alert(message);
 });
 
-if (startMultiplayerGame) {
-  startMultiplayerGame.addEventListener("click", (e) => {
+function startGame() {
+  //console.log("INSIDE nextround EVENTLISTENER, about to start game")
+  socket.emit("startGame", inviteCode)
+}
 
-    console.log("INSIDE EVENTLISTENER")
-    socket.emit("startGame", inviteCode)
-   
-  })
+function expandMinimap() {
+  if (!GameOver) {
+    document.getElementById('map').style.width = '600px';
+    document.getElementById('map').style.height = '400px';
+    submitBtn.style.display = 'block';
+
+    setTimeout(function () {
+      map.invalidateSize();
+    }, 100);
+    console.log("AFTER SETTIMEOUT JUST ABOU TO CHNGE BTN SIZE")
+    submitBtn.style.display = 'block';
+    submitBtn.style.bottom = '5px';
+    submitBtn.style.right = '30px';
+    submitBtn.style.width = '580px';
+  }
+}
+
+function initialize(lat, lng) {
+  const fenway = { lat: lat, lng: lng };
+
+  panorama = new google.maps.StreetViewPanorama(
+    document.getElementById("pano"),
+    {
+      position: fenway,
+      pov: {
+        heading: 34,
+        pitch: 10,
+      },
+      disableDefaultUI: true,  // Disable default UI controls
+      linksControl: false,     // Disable navigation arrows
+      panControl: false,       // Disable panning control
+      addressControl: false,   // Disable street address display
+      showRoadLabels: false,   // Hide street name indications
+    }
+  );
+
+}
+
+function minimizeMinimap() {
+  // Hide the button and revert properties
+  if (!GameOver) {
+    submitBtn.style.width = '280px';
+    document.getElementById('map').style.width = '300px';
+    document.getElementById('map').style.height = '200px';
+    //submitBtn.style.display = 'block';
+  }
+
+  /*submitBtn.style.bottom = '6220px'; //Random out of screen coordinates
+  submitBtn.style.left = '1100px';*/
+}
+
+if (startMultiplayerGame) {
+  startMultiplayerGame.removeEventListener("click", startGame)
+  startMultiplayerGame.addEventListener("click", startGame)
 }
 
 
@@ -546,6 +559,6 @@ if (startMultiplayerGame) {
             map.removeLayer(layer);
         }
     });
-}
+  }
 
 })

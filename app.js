@@ -357,6 +357,7 @@ io.on("connection", (socket) => {
     // reset data from previous round, if applicable
     activeSessions[inviteCode].set("numGuesses", 0)
     activeSessions[inviteCode].get("eliminatedUsers").clear();
+    console.log(`Data for room ${inviteCode} after startGame called: ${activeSessions[inviteCode]}`)
 
     //Global vars from script.js
     let latitude;
