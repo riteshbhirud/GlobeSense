@@ -15,7 +15,7 @@ if (createGameButton) {
             console.log(data);
             inviteCodeParagraph.innerText = `Invite Code: ${data.inviteCode}`;
             //window.location.href = `http://localhost:5550/join/${data.inviteCode}`
-            window.location.href = `https://globesense.tech/join/${data.inviteCode}`
+            window.location.href = `https://www.globesense.tech/join/${data.inviteCode}`
 
         } else {
             alert("Failed to create session");
@@ -28,7 +28,7 @@ if (joinGameForm) {
         e.preventDefault();
         const inviteCode = inviteCodeInput.value.trim();
         //window.location.href = `http://localhost:5550/join/${inviteCode}`
-        window.location.href = `https://globesense.tech/join/${inviteCode}`
+        window.location.href = `https://www.globesense.tech/join/${inviteCode}`
 
     })
 }

@@ -1,5 +1,5 @@
 //const socket = io("http://127.0.0.1:5550");
-const socket = io("https://globesense.tech");
+const socket = io("https://www.globesense.tech");
 const startMultiplayerGame = document.getElementById("startMultiplayerGame")
 const urlParams = new URL(window.location.href);
 const submitBtn = document.getElementById("submit")
