@@ -1,4 +1,5 @@
-const socket = io("http://127.0.0.1:5550");
+//const socket = io("http://127.0.0.1:5550");
+const socket = io("https://globesense.tech");
 const startMultiplayerGame = document.getElementById("startMultiplayerGame")
 const urlParams = new URL(window.location.href);
 const submitBtn = document.getElementById("submit")
@@ -8,6 +9,7 @@ const endingDiv = document.getElementById("endingDiv")
 const parentMap = document.getElementById("parentMap");
 const eliminationRoom = document.getElementById("eliminationRoom")
 const leaderboardDiv = document.getElementById("leaderboard")
+const lobbyHeading = document.getElementById("page-title")
 let map;
 let panorama;
 let sec = 300;
@@ -22,7 +24,7 @@ let userPoints;
 let actualLatitude;
 let actualLongitude;
 var timer;
-
+let userId;
 let inviteCode = urlParams.pathname.split('/').pop()
 console.log("Invite Code", inviteCode)
 
@@ -39,15 +41,37 @@ async function fetchUserAndJoinRoom(inviteCode) {
     if (!response.ok) {
       throw new Error('Failed to fetch user');
     }
-
     const data = await response.json(); // Parse the JSON response
+    userId = data.user.username
     console.log("Logged-in user front end", data.user);
-
+    console.log("Logged-in user front end", data.user.username);
+    lobbyHeading.style.display = "block"
+    lobbyHeading.textContent = `${userId}'s Room`
     //socket.username = data.user.username; // Set the socket username
     //console.log("Setting socket username to:", socket.username);
     socket.emit("joinRoom", { inviteCode: inviteCode, username: data.user.username }); // Emit the joinRoom event
   } catch (error) {
     console.error("Error fetching user", error);
+  }
+}
+
+async function fetchUser(){
+  try {
+    console.log("about to fetch user")
+    const response = await fetch("/api/user", {
+      method: "GET",
+      credentials: "include", // Ensures cookies are sent with the request
+    });
+    console.log("finished fetching user")
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch user');
+    }
+    data = await response.json()
+    return data ? data.user.username: null;
+
+  } catch (error) {
+    return null;
   }
 }
 
@@ -115,7 +139,9 @@ const playerListDiv = document.getElementById("playerList");
 const disconnectForm = document.getElementById("disconnectForm")
 
 
+
 console.log("beginning")
+endingDiv.style.display = "none";
 
 music = document.getElementById("background-audio");
 music.muted = true;
@@ -136,11 +162,13 @@ socket.on("updatePlayerList", (players) => {
 
 });
 
-socket.on("gameStarted", ({latitude, longitude, musicUrl, isEliminated}) => {
+socket.on("gameStarted", async ({latitude, longitude, musicUrl, playerData}) => {
   console.log("IN GAMESTARTED SOCKET LISTENER")
+
   if(map){
     clearAllMarkers();
   }
+  
 
 
   GameOver = false;
@@ -150,9 +178,20 @@ socket.on("gameStarted", ({latitude, longitude, musicUrl, isEliminated}) => {
   console.log(latitude)
   console.log(longitude)
   console.log(musicUrl)
-  //alert(`lat: ${latitude}, long: ${longitude}, music: ${musicUrl}`)
   
+  console.log("PlayerData",playerData)
+  let username = await fetchUser();
+  if(!playerData[username]){
+    alert("Error fetching user! ")
+  }
+  console.log("username in gamestarted:", username)
+  console.log("points:", playerData[username].points)
+  console.log("type of points:", typeof playerData[username].points)
+   
+  isEliminated = playerData[username].points <= 0
+  console.log(`user: ${username}, ${isEliminated}`)
   if (isEliminated) {
+    alert("GOING TO ELIMINATION ROOM!")
     parentMap.style.display = "none";
     gameDiv.style.display = "none";
     eliminationRoom.style.display = "block";
@@ -166,8 +205,9 @@ socket.on("gameStarted", ({latitude, longitude, musicUrl, isEliminated}) => {
     music.loop = true;
     
     // set display of gameDiv to "block"
+    lobbyHeading.style.display = "none"
     lobbyDiv.style.display = "none";
-    gameDiv.style.display = "block";
+    gameDiv.style.display = "block";    
     endingDiv.style.display = "none";
     parentMap.style.display = "block";
 
@@ -360,10 +400,20 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 
   return distance;
 }
+const readyUpBtns = document.querySelectorAll(".readyUp")
+readyUpBtns.forEach(button=>{
+  button.removeEventListener("click", startGame)
+  button.addEventListener("click", startGame)
 
+})
 
-socket.on("roundStatsCollected", (data) => {
+socket.on("roundStatsCollected", async (data) => {
+  
+  readyUpBtns.forEach(button=>{
 
+    button.disabled = false;
+  
+  })
   clearAllMarkers();
 
   // Initialize Leaflet Map
@@ -391,16 +441,30 @@ socket.on("roundStatsCollected", (data) => {
     shadowSize: [41, 41]
   });
   ActualLocationMarker = L.marker(ActualLatLong, { icon: redIcon }).addTo(map);
-  
-  
-
-
   //marker = L.marker(latlng).addTo(map);
 
 
   //{eliminatedUsers, roundData}
   eliminatedUsers = data.eliminatedUsers
   roundData = data.roundData
+  playingUsers = data.playingUsers;
+  console.log("PlayingUsers", playingUsers)
+  if (playingUsers.length === 1) {
+    alert(`${playingUsers[0]} won the game!`)
+    readyUpBtns.forEach(button=>{
+      button.style.display = "none";
+    })
+    
+    document.getElementById("showGameOver").style.display = "block"
+    document.getElementById("showGameOver").addEventListener("click", () => {
+      endingDiv.style.display = "none";
+      document.getElementById("gameOverDiv").style.display = "block";
+      parentMap.style.display = "none"
+    })
+    document.getElementById("gameOverDiv").innerHTML += `${playingUsers[0]} won the game with ${roundData[playingUsers[0]].points}.`
+
+
+  }
   console.log("DATA:", data)
   console.log("elimusers:", eliminatedUsers)
   console.log("rounddata:", roundData)
@@ -429,6 +493,12 @@ socket.on("roundStatsCollected", (data) => {
     console.log("USERNAMAE:", username)
     console.log("USERDATA:", userData)
     if (userData.points <= 0) { 
+      if (username === await fetchUser()) {
+        readyUpBtns.forEach(button=>{
+          button.style.display = "none";
+        })
+      }
+      
       if (eliminatedUsers.includes(username)) {
         latlng = {lat: userData.guess[0], lng: userData.guess[1]}
         L.marker(latlng).addTo(map);
@@ -441,14 +511,17 @@ socket.on("roundStatsCollected", (data) => {
     }
     
   }
-  const nextRound = document.getElementById("nextRound")
-  console.log("NEXT ROUND:", nextRound)
-  /*if (nextRound) {
+  
+  //const readyUp = document.getElementsByClassName("readyUp")
+
+  
+  //console.log("NEXT ROUND:", readyUp)
+  /*if (readyUp) {
     console.log("next round reached")
     document.addEventListener("keydown", (e) => {
       if(e.key === " "){
 
-      console.log("INSIDE nextround EVENTLISTENER, about to start game")
+      console.log("INSIDE readyUp EVENTLISTENER, about to start game")
       socket.emit("startGame", inviteCode)
 
       }
@@ -460,11 +533,11 @@ socket.on("roundStatsCollected", (data) => {
 
   
 
-  if (nextRound) {
+  /*if (readyUpRound[0]) {
     console.log("next round reached")
-    nextRound.removeEventListener("click", startGame)
-    nextRound.addEventListener("click", startGame)
-  }
+    readyUpRound[0].removeEventListener("click", startGame)
+    readyUpRound[0].addEventListener("click", startGame)
+  }*/
 
   
 })
@@ -475,9 +548,13 @@ socket.on("errorMessage", (message) => {
   alert(message);
 });
 
-function startGame() {
-  //console.log("INSIDE nextround EVENTLISTENER, about to start game")
-  socket.emit("startGame", inviteCode)
+
+function startGame(event) {
+  console.log("StartGame Called from button")
+  //console.log("INSIDE readyUp EVENTLISTENER, about to start game")
+  event.target.disabled = true;
+  socket.emit("iAmReady", {inviteCode: inviteCode})
+  console.log(`IamReady emitted with code ${inviteCode}`)
 }
 
 function expandMinimap() {
@@ -529,11 +606,6 @@ function minimizeMinimap() {
 
   /*submitBtn.style.bottom = '6220px'; //Random out of screen coordinates
   submitBtn.style.left = '1100px';*/
-}
-
-if (startMultiplayerGame) {
-  startMultiplayerGame.removeEventListener("click", startGame)
-  startMultiplayerGame.addEventListener("click", startGame)
 }
 
 

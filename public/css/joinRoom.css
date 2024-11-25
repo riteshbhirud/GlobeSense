@@ -23,51 +23,6 @@ html,body {
     font-size: 70px;
 }
 
-#multiplayer-buttons-label {
-    width: fit-content;
-    border: 2px solid #ffff88;
-    border-radius: 40px;
-    padding-left: 30px;
-    padding-right: 30px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    color: #ffff88;
-    text-align: center;
-    margin: auto;
-    font-size: 25px;
-}
-
-
-
-.buttonsContainer {
-    display: flex;
-    flex-flow: row wrap;
-    justify-content: center;
-    align-items: center;
-    align-content: center;
-    gap: 20px;
-}
-
-.playButton {
-    border-radius: 30px;
-    border: 2px solid transparent;
-    width: 150px;
-    background-color: yellow;
-    color: #6f42c1;
-    font-weight: bold;
-    transition: border-color 0.1s ease-in;
-}
-
-.playButton:hover {
-    background-color: #fffacd;
-    transform: scale(1.05);
-}
-
-.playIcon {
-    height: 40px;
-    width: 40px;
-}
-
 .nav-item {
     margin-left: 20px;
     margin-right: 10px;
@@ -109,4 +64,51 @@ html,body {
 
 .dropdown-item:hover {
     background-color: #f1f1f1;
+}
+
+.inputField {
+    border-radius: 30px;
+    border: none;
+}
+
+
+.formContainer {
+    display: flex;
+    flex-flow: column wrap;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    gap: 10px;
+}
+
+.inputLabels {
+    color: yellow;
+    text-align: center;
+    font-size: 18px;
+}
+
+input{
+    text-align:center;
+    background-color: #ffffaa;
+    font-weight: bold;
+ }
+
+ input::placeholder {
+    color: purple;
+    font-weight: bold;
+ }
+
+ #joinButton {
+    border-radius: 30px;
+    border: 2px solid transparent;
+    width: 120px;
+    background-color: yellow;
+    color: #6f42c1;
+    font-weight: bold;
+    transition: all 0.1s ease-in;
+ }
+
+ #joinButton:hover {
+    background-color: #fffacd;
+    transform: scale(1.05);
 }

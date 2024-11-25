@@ -11,13 +11,13 @@
 </head>
 <body>
     <audio id="background-audio" src="https://commondatastorage.googleapis.com/codeskulptor-demos/riceracer_assets/music/race2.ogg" autoplay loop>Your browser does not support the audio element.</audio>
+    <h1 id="page-title"> </h1>
     <div id="lobbyDiv">
+     
         <h2>Players in Room:</h2>
         <div id="playerList"></div>
         <div id ="disconnectForm"></div>
-        <% if (isHost) { %>
-        <button id="startMultiplayerGame">Start Game!</button>
-        <%} %>
+        <button type="button" class="readyUp">I'm ready</button>
     </div>
 
     <div id ="gameDiv">
@@ -39,10 +39,12 @@
     </div>
 
     <div id="endingDiv">
+        <button type="button" class="readyUp">I'm ready</button>
         <div id="leaderboard"></div>
-        <% if (isHost) { %>
-            <button type="button" id="nextRound">Start next round!</button>
-        <%} %>
+        <button type = "button" id="showGameOver">Next</button>
+    </div>
+    <div id="gameOverDiv">
+        <a href="/">Go back to home page</a>
     </div>
    
     <script src="/socket.io/socket.io.js"></script>

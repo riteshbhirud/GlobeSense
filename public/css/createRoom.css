@@ -1,0 +1,48 @@
+#title {
+    color: yellow;
+    text-align: center;
+    margin-top: 50px;
+    font-size: 70px;
+}
+
+.buttonsContainer {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    gap: 20px;
+}
+
+#createSession {
+    border-radius: 30px;
+    border: 2px solid transparent;
+    width: 150px;
+    background-color: yellow;
+    color: #6f42c1;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+#createSession:hover {
+    background-color: #fffacd;
+    transform: scale(1.05);
+}
+
+html,body {
+    /*background-color: linear-gradient(to right, rgba(255,0,0,0), rgba(255,0,0,1)) !important;*/
+    background: linear-gradient(135deg, #9d50bb, #6e48aa, #8e2de2, #4a00e0, #ff0080);
+    background-size: 400% 400%;
+    animation: gradientAnimation 15s ease infinite; 
+    border-radius: 0.5rem;
+    width: 100%;
+    height: 100%;
+
+    
+}
+
+@keyframes gradientAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}

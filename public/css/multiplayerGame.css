@@ -1,31 +1,191 @@
-html,
+/*html, body {
+ width: 100%;
+ height: 100%;
+  margin: 0;
+  padding: 0; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #4b0082; 
+  font-family: Arial, sans-serif;
+  color: #fffacd;
+}*/
 body {
-  height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column; 
+  justify-content: center; 
+  align-items: center; 
+  font-family: Arial, sans-serif;
+  color: #fffacd;
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #9d50bb, #6e48aa, #8e2de2, #4a00e0, #ff0080);
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite; 
+  border-radius: 0.5rem;
+  width: 100%;
+  height: 100%;
+}
+@keyframes gradientAnimation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-#gameDiv {
-    display: none;
+#page-title{
+  margin-top: 10px;
+  padding: 20px 0;
+  font-size: 2.5rem;
+  color: #ffd700; 
+  text-align: center;
+  font-weight: bold;
+}
+
+#lobbyDiv {
+  background-color: #6a0dad; 
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 350px;
+  text-align: center;
+  color: #fffacd;
+}
+
+#lobbyDiv h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #ffd700;
+}
+
+
+#playerList {
+  background-color: #5e239d;
+  border-radius: 5px;
+  padding: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+  border: 2px solid #ffd700;
+}
+
+#playerList .player {
+  background-color: #8a2be2;
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 1.1rem;
+  text-align: left;
+  color: #fffacd;
+  border: 1px solid #ffd700;
+}
+.readyUp {
+  background-color: #ffd700;
+  color: #4b0082;
+  font-size: 1rem;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+.readyUp:hover {
+  background-color: #fffacd;
+  transform: scale(1.05);
+}
+
+.readyUp:disabled {
+  background-color: #b8a003; 
+  color: #6a0dad; 
+  cursor: not-allowed; 
+  opacity: 0.7; 
 }
 
 #endingDiv {
-    display: none;
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #6a0dad;
+  color: #fffacd;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  width: 400px;
+  text-align: center;
+  z-index: 10000;
+}
+
+#endingDiv .readyUp,
+#endingDiv #showGameOver {
+  background-color: #ffd700;
+  color: #4b0082;
+  font-size: 1.2rem;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin: 10px 5px;
+  width: 80%;
+}
+
+#endingDiv .readyUp:hover,
+#endingDiv #showGameOver:hover {
+  background-color: #fffacd;
+  transform: scale(1.05);
+}
+
+#endingDiv .readyUp:disabled,
+#endingDiv #showGameOver:disabled {
+  background-color: #b8a003;
+  color: #6a0dad;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+#endingDiv #leaderboard {
+  background-color: #5e239d;
+  border-radius: 10px;
+  padding: 15px;
+  margin: 20px 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 2px solid #ffd700;
+  color: #fffacd;
+  font-size: 1.1rem;
+  text-align: left;
 }
 
 #parentMap {
     display: none;
 }
 
+#gameDiv {
+  display: none;
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: #000; 
+  z-index: 10;
+}
+
+
 #pano {
     float: center;
-    height: calc(100vh);
+   /* height: calc(100vh);*/
+    height: 100%;
     width: 100%;
-    position: fixed;
-    z-index: 1;
-    margin: 0; /* Remove any margin */
-    padding: 0; /* Remove any padding */
+    position: relative;
+    top: 0;
+    left:0;
+    margin: 0; 
+    padding: 0; 
+    z-index: 9997;
   }
   
   
@@ -69,7 +229,7 @@ body {
     position: absolute;
     top:8%;
     left: 48%;
-    z-index: 999;
+    z-index: 9999;
     background-color: #6f42c1;
     color:yellow;
     font-size: x-large;
@@ -110,3 +270,9 @@ body {
   #eliminationRoom {
     display: none;
   }
+#showGameOver{
+  display: none;
+}
+#gameOverDiv{
+  display: none;
+}

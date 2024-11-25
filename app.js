@@ -40,7 +40,7 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
   cookie:{
-    secure: false,
+    secure: true,
     maxAge: 60000
   }
 }));
@@ -49,7 +49,10 @@ app.use(cookieParser());
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 
-app.use(cors());
+app.use(cors({
+  origin: "https://www.globesense.tech", 
+  credentials: true                   
+}));
 app.use(bodyParser.json());
 
 
@@ -61,8 +64,10 @@ const server = http.createServer(app);
 //const io = new Server(server);
 const io = new Server(server, {
   cors: {
-      origin: "http://localhost:5550", // Allow your frontend's origin
+      //origin: "http://localhost:5550", // Allow your frontend's origin
+      origin: "https://www.globesense.tech",
       methods: ["GET", "POST"],       // Allowed HTTP methods
+      credentials: true  
   }
 });
 
@@ -112,11 +117,12 @@ app.get('/api/get-csrf-token', csrfProtection, (req, res) => {
 
 app.get("/api/user", authenticateToken,(req,res)=>{
   console.log()
-  console.log("USER:", req.session.user);
-  if(req.session.user){
-    res.json({user: req.session.user})
+  console.log("USER:", req.user);
+  if(req.user){
+    res.json({user: req.user})
   }else{
     console.log("Unable to send userdata from app.js")
+    res.json({user: null})
   }
 })
 
@@ -208,18 +214,37 @@ app.get('/multiplayer', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'multiplayer.html'));
 })
 
-app.get('/createGame', authenticateToken, (req, res) => {
+app.get('/createGame', authenticateToken, csrfProtection, (req, res) => {
   if (!req.user) {
     return res.redirect('/login')
   }
-  res.sendFile(path.join(__dirname, 'views', 'createRoom.html'));
+  csrfToken = req.csrfToken()
+  console.log("CURRENT USER:", req.user);
+  if (req.user) {
+    console.log("CSRF Token inserted into logout form:", csrfToken)
+  }
+  let user = req.user
+  res.render("createRoom", {
+    user: user,
+    csrf_token: csrfToken
+
+  });
 })
 
-app.get('/join', authenticateToken, (req, res) => {
+app.get('/join', authenticateToken, csrfProtection, (req, res) => {
   if (!req.user) {
     return res.redirect('/login')
   }
-  res.sendFile(path.join(__dirname, 'views', 'joinRoom.html'));
+  csrfToken = req.csrfToken()
+  console.log("CURRENT USER:", req.user);
+  if (req.user) {
+    console.log("CSRF Token inserted into logout form:", csrfToken)
+  }
+  let user = req.user
+  res.render('joinRoom', {
+    user: user,
+    csrf_token: csrfToken
+  });
 
   
 })
@@ -238,12 +263,12 @@ app.get('/join/:gameId', authenticateToken, async (req, res) => {
     // check if active
     if(gameSession){
       if(gameSession.active === false){
-        let isHost = req.user.username === gameSession.host
+        /*let isHost = req.user.username === gameSession.host
         //res.json({username: require('./routes/user').getUser().username, gameId: gameId})
         res.render("multiplayerGame", {
           isHost: isHost
-        })
-        //res.sendFile(path.join(__dirname, 'views', 'multiplayerGame.html'));
+        })*/
+        res.render('multiplayerGame', {});
       }else{
         res.status(403).send("youre not invited lil bro")
       }
@@ -290,9 +315,17 @@ app.use((err, req, res, next) => {
 
 
 const activeSessions = {};
-// { inviteCode: { numGuesses: 0, users: {u1: {points: 5000, rawPoints: _, guess: _, distance: _, time: _}, ...}, eliminatedUsers: [] } }
+// { inviteCode: { numGuesses: 0, users: {u1: {points: 5000, rawPoints: _, guess: _, distance: _, time: _}, ...}, eliminatedUsers: [], numReady: 0  } }
 
 io.on("connection", (socket) => {
+
+  function mapToObject(map) {
+    const obj = {};
+    for (const [key, value] of map.entries()) {
+        obj[key] = value instanceof Map ? mapToObject(value) : value;
+    }
+    return obj;
+  }
   console.log("A user connected");
 
   // Handle joining a room
@@ -319,7 +352,7 @@ io.on("connection", (socket) => {
       if (!session.players.has(username)) {
         console.log(session.players)
         
-        session.players.set(username, 5000);
+        session.players.set(username, 1000);
         await session.save();
         console.log(session.players)
       }
@@ -328,6 +361,7 @@ io.on("connection", (socket) => {
       if (!activeSessions[inviteCode]){
         activeSessions[inviteCode] = new Map();
         activeSessions[inviteCode].set("numGuesses", 0)
+        activeSessions[inviteCode].set("numReady", 0)
         activeSessions[inviteCode].set("users", new Map());
         console.log("MAP OF USERS AFTER INITIALIZTION:", activeSessions[inviteCode].get("users"))
         activeSessions[inviteCode].set("eliminatedUsers", new Set());
@@ -336,7 +370,7 @@ io.on("connection", (socket) => {
       console.log("MAP OF USERS:", activeSessions[inviteCode].get("users"))
       if (!activeSessions[inviteCode].get("users").has(username)) {
         activeSessions[inviteCode].get("users").set(username, new Map());
-        activeSessions[inviteCode].get("users").get(username).set("points", 5000);
+        activeSessions[inviteCode].get("users").get(username).set("points", 1000);
       }
 
       socket.join(inviteCode);
@@ -353,9 +387,10 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("startGame", async (inviteCode) => {
+  async function startGame(inviteCode) {
     // reset data from previous round, if applicable
     activeSessions[inviteCode].set("numGuesses", 0)
+    activeSessions[inviteCode].set("numReady", 0)
     activeSessions[inviteCode].get("eliminatedUsers").clear();
     console.log(`Data for room ${inviteCode} after startGame called: ${activeSessions[inviteCode]}`)
 
@@ -580,12 +615,13 @@ io.on("connection", (socket) => {
     
     console.log(inviteCode)
     console.log("INSIDE STARTGAME SOCKET HANDLER")
-    const isEliminated = activeSessions[inviteCode].get("users").get(socket.username).get("points") <= 0
-    io.to(inviteCode).emit("gameStarted", {latitude: latitude, longitude: longitude, musicUrl: url, isEliminated: isEliminated});
+    
+    const playerData = mapToObject(activeSessions[inviteCode].get("users"))
+    //console.log(`username: ${socket.username}, isEliminated: ${isEliminated}`);
+    io.to(inviteCode).emit("gameStarted", {latitude: latitude, longitude: longitude, musicUrl: url, playerData: playerData});
 
 
-
-  });
+  };
 
   socket.on("iAmDone", async ({inviteCode, userGuess, userPoints, userdistance, elapsedTime}) => {
     console.log(`${socket.username} is done.`)
@@ -604,11 +640,14 @@ io.on("connection", (socket) => {
     // check if round is over (all players have guessed)
     mapOfUsers = activeSessions[inviteCode].get("users")
     activeUsers = 0;
+    playingUsers = []
     for (const [username, userData] of mapOfUsers) {
       if (userData.get("points") > 0) {
+        
         activeUsers++;
       }
     }
+    
     console.log("Number of active users in the game:", activeUsers)
 
     if (activeSessions[inviteCode].get("numGuesses") === activeUsers) {
@@ -634,19 +673,15 @@ io.on("connection", (socket) => {
         }
 
         userData.set("points", userData.get("points") - Math.round(((bestScore - userData.get("rawPoints"))*0.3)))
-        if (userData.get("points") < 0) {
+        if (userData.get("points") <= 0) {
           userData.set("points", 0);
           activeSessions[inviteCode].get("eliminatedUsers").add(username)
           
+        } else {
+          playingUsers.push(username)
         }
       }
-      function mapToObject(map) {
-        const obj = {};
-        for (const [key, value] of map.entries()) {
-            obj[key] = value instanceof Map ? mapToObject(value) : value;
-        }
-        return obj;
-      }
+
       // send activeSessions[inviteCode]["users"]
       console.log("USERS FROM APP.JS:", activeSessions[inviteCode].get("users"))
       console.log("ELIM USERS",activeSessions[inviteCode].get("eliminatedUsers"))
@@ -655,16 +690,29 @@ io.on("connection", (socket) => {
 
       
 
-      io.to(inviteCode).emit("roundStatsCollected", {eliminatedUsers: Array.from(activeSessions[inviteCode].get("eliminatedUsers")), roundData: roundData})
-      
-
-
+      io.to(inviteCode).emit("roundStatsCollected", {eliminatedUsers: Array.from(activeSessions[inviteCode].get("eliminatedUsers")), roundData: roundData, playingUsers: playingUsers})
 
     }
+  })
+  
+  socket.on("iAmReady", ({inviteCode}) => {
+    console.log("inside iAmReady listener")
+    
+    activeSessions[inviteCode].set("numReady", activeSessions[inviteCode].get("numReady")+1)
+    const mapOfUsers = activeSessions[inviteCode].get("users")
+    // check if everyone is ready
+    let activeUsers = 0
+    for (const [username, userData] of mapOfUsers) {
+      if (userData.get("points") > 0) {
+        activeUsers++;
+      }
+    }
 
+    if (activeSessions[inviteCode].get("numReady") === activeUsers) {
+      
+      startGame(inviteCode);
 
-
-
+    }
 
   })
 

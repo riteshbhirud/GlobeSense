@@ -49,7 +49,8 @@ router.post('/register', async (req, res) => {
       // Set the token as an HTTP-only cookie
       res.cookie("jwt", token, {
         httpOnly: true, // Prevents JavaScript access to cookies
-        secure: false,   // Use secure cookies (only HTTPS) in production
+        //secure: false,   // Use secure cookies (only HTTPS) in production
+        secure: true,
         sameSite: "strict", // Helps prevent CSRF attacks
         maxAge: 20000    // Cookie expiration set to 20 seconds
       });
@@ -57,7 +58,8 @@ router.post('/register', async (req, res) => {
       // Ideally the refresh token should be stored in long-term storage such as a database
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,  // Prevents JavaScript access to cookies
-        secure: false,   // Use secure cookies (only HTTPS) in production
+        //secure: false,   // Use secure cookies (only HTTPS) in production
+        secure: true,
         sameSite: "strict", // Helps prevent CSRF attacks
         maxAge: 60000    // Cookie expiration set to 1 min
       });
@@ -98,7 +100,8 @@ router.post('/login', async (req, res) => {
       // Set the token as an HTTP-only cookie
       res.cookie("jwt", token, {
         httpOnly: true, // Prevents JavaScript access to cookies
-        secure: false,   // Use secure cookies (only HTTPS) in production
+        //secure: false,   // Use secure cookies (only HTTPS) in production
+        secure: true,
         sameSite: "strict", // Helps prevent CSRF attacks
         maxAge: 600000    // Cookie expiration set to 10 mins
       });
@@ -106,7 +109,8 @@ router.post('/login', async (req, res) => {
       // Ideally the refresh token should be stored in long-term storage such as a database
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,  // Prevents JavaScript access to cookies
-        secure: false,   // Use secure cookies (only HTTPS) in production
+        //secure: false,   // Use secure cookies (only HTTPS) in production
+        secure: true,
         sameSite: "strict", // Helps prevent CSRF attacks
         maxAge: 1200000    // Cookie expiration set to 20 min
       });
